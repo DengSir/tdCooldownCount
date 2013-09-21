@@ -25,7 +25,7 @@ end
 
 function Timer:Constructor(cooldown)
 	self:SetParent(cooldown:GetParent())
-	self:SetFrameLevel(cooldown:GetParent():GetFrameLevel() + 5)
+	self:SetFrameLevel(cooldown:GetFrameLevel() + 5)
 	self:SetPoint('CENTER')
 
 	self.text = self:CreateFontString(nil, 'OVERLAY')
