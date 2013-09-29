@@ -109,6 +109,26 @@ function Setting:GetStartRemain()
 	return self:GetProfile().startRemain
 end
 
+function Setting:IsShineEnabled()
+    return self:GetProfile().shine
+end
+
+function Setting:GetShineScale()
+    return self:GetProfile().shineScale
+end
+
+function Setting:GetShineDuration()
+    return self:GetProfile().shineDuration
+end
+
+function Setting:GetShineMinDuration()
+    return self:GetProfile().shineMinDuration
+end
+
+function Setting:GetShineType()
+    return self:GetProfile().shineType
+end
+
 ---- TextHelper
 
 function TextHelper.SOON(remain)

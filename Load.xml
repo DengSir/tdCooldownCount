@@ -5,5 +5,6 @@
     <Script file="Main.lua" />
     <Script file="Setting.lua" />
     <Script file="Timer.lua" />
+    <Script file="Shine.lua" />
     <Script file="Config.lua" />
 </Ui>

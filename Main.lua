@@ -58,10 +58,9 @@ function tdCC:OnInitialize()
 
                     shine = true,
                     shineMinDuration = 10,
-                    shineClass = 'ICON',
+                    shineType = 'ICON',
                     shineScale = 4,
                     shineDuration =  1,
-                    shineAlpha = 1,
                 },
                 Totem = {
                     enable = false,

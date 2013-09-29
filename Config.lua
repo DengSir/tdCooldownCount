@@ -8,8 +8,37 @@ function tdCC:LoadOptionFrame()
         order = order + 1
         return order
     end
-    
-    local function createClassGroup(name, class, isBuff)
+
+    local function getTypeValue(type, key)
+        return self.db.profile.types[type][key]
+    end
+
+    local function setTypeValue(type, key, value)
+        self.db.profile.types[type][key] = value
+        self.Timer:RefreshAll()
+    end
+
+    local function getTypeStyleColor(type, style)
+        local color = self.db.profile.types[type].styles[style]
+        return color.r, color.g, color.b
+    end
+
+    local function setTypeStyleColor(type, style, r, g, b)
+        local color = self.db.profile.types[type].styles[style]
+        color.r, color.g, color.b = r, g, b
+        self.Timer:RefreshAll()
+    end
+
+    local function getTypeStyleScale(type, style)
+        return self.db.profile.types[type].styles[style].scale
+    end
+
+    local function setTypeStyleScale(type, style, value)
+        self.db.profile.types[type].styles[style].scale = value
+        self.Timer:RefreshAll()
+    end
+
+    local function createTypeGroup(name, type, isBuff)
         local info = {
             type = 'group',
             name = name,
@@ -21,10 +50,10 @@ function tdCC:LoadOptionFrame()
                     name = ENABLE,
                     order = makeorder(),
                     get = function()
-                        return self.db.profile.types[class].enable
+                        return getTypeValue(type, 'enable')
                     end,
                     set = function(_, value)
-                        self.db.profile.types[class].enable = value
+                        setTypeValue(type, 'enable', value)
                     end
                 },
                 general = {
@@ -32,13 +61,13 @@ function tdCC:LoadOptionFrame()
                     name = GENERAL,
                     order = makeorder(),
                     get = function(item)
-                        return self.db.profile.types[class][item[#item]]
+                        return getTypeValue(type, item[#item])
                     end,
                     set = function(item, value)
-                        self.db.profile.types[class][item[#item]] = value
+                        setTypeValue(type, item[#item], value)
                     end,
                     disabled = function()
-                        return not self.db.profile.types[class].enable
+                        return not getTypeValue(type, 'enable')
                     end,
                     args = {
                         hideBlizModel = {
@@ -95,26 +124,24 @@ function tdCC:LoadOptionFrame()
                     name = L['Style'],
                     order = makeorder(),
                     disabled = function()
-                        return not self.db.profile.types[class].enable
+                        return not getTypeValue(type, 'enable')
                     end,
                     get = function(item)
                         local name = item[#item]
                         local style = name:match('^_(.+)$')
                         if style then
-                            return self.db.profile.types[class].styles[style].scale
+                            return getTypeStyleScale(type, style)
                         else
-                            local tbl = self.db.profile.types[class].styles[name]
-                            return tbl.r, tbl.g, tbl.b
+                            return getTypeStyleColor(type, name)
                         end
                     end,
                     set = function(item, ...)
                         local name = item[#item]
                         local style = name:match('^_(.+)$')
                         if style then
-                            self.db.profile.types[class].styles[style].scale = ...
+                            setTypeStyleScale(type, style, ...)
                         else
-                            local tbl = self.db.profile.types[class].styles[name]
-                            tbl.r, tbl.g, tbl.b = ...
+                            setTypeStyleColor(type, name, ...)
                         end
                     end,
                     args = {
@@ -181,14 +208,14 @@ function tdCC:LoadOptionFrame()
                     type = 'group',
                     name = L['Font & Position'],
                     order = makeorder(),
-                    disabled = function()
-                        return not self.db.profile.types[class].enable
-                    end,
                     get = function(item)
-                        return self.db.profile.types[class][item[#item]]
+                        return getTypeValue(type, item[#item])
                     end,
                     set = function(item, value)
-                        self.db.profile.types[class][item[#item]] = value
+                        setTypeValue(type, item[#item], value)
+                    end,
+                    disabled = function()
+                        return not getTypeValue(type, 'enable')
                     end,
                     args = {
                         fontFace = {
@@ -252,13 +279,13 @@ function tdCC:LoadOptionFrame()
                 name = L['Shine'],
                 order = makeorder(),
                 get = function(item)
-                    return self.db.profile.types[class][item[#item]]
+                    return getTypeValue(type, item[#item])
                 end,
                 set = function(item, value)
-                    self.db.profile.types[class][item[#item]] = value
+                    setTypeValue(type, item[#item], value)
                 end,
                 disabled = function()
-                    return not self.db.profile.types[class].enable
+                    return not getTypeValue(type, 'enable')
                 end,
                 args = {
                     shine = {
@@ -267,7 +294,7 @@ function tdCC:LoadOptionFrame()
                         order = makeorder(),
                         width = 'full',
                     },
-                    shineClass = {
+                    shineType = {
                         type = 'select',
                         name = L['Shine class'],
                         order = makeorder(),
@@ -305,15 +332,6 @@ function tdCC:LoadOptionFrame()
                         max = 5,
                         step = 0.1,
                     },
-                    shineAlpha = {
-                        type = 'range',
-                        name = L['Shine duration'],
-                        order = makeorder(),
-                        width = 'full',
-                        min = 0.2,
-                        max = 1,
-                        step = 0.1,
-                    },
                 }
             }
         end
@@ -326,10 +344,10 @@ function tdCC:LoadOptionFrame()
         name = L['tdCC Options'],
         childGroups = 'tab',
         args = {
-            action = createClassGroup(L['Action'], 'Action'),
-            buff = createClassGroup(L['Buff'], 'Buff', true),
-            totem = createClassGroup(L['Totem'], 'Totem', true),
-            rune = createClassGroup(L['Rune'], 'Rune', true)
+            action = createTypeGroup(L['Action'], 'Action'),
+            buff = createTypeGroup(L['Buff'], 'Buff', true),
+            totem = createTypeGroup(L['Totem'], 'Totem', true),
+            rune = createTypeGroup(L['Rune'], 'Rune', true)
         }
     }
 
