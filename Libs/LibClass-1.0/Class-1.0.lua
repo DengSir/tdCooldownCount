@@ -1,10 +1,4 @@
 
---[[
-
-by ldz5
-
---]]
-
 local MAJOR, MINOR = 'LibClass-1.0', 1
 local Class = LibStub:NewLibrary(MAJOR, MINOR)
 if not Class then
@@ -13,13 +7,59 @@ end
 
 ---- Lua APIS
 
-local error, pcall, type = error, pcall, type
+local assert, error, pcall, type = assert, error, pcall, type
 local wipe, pairs, rawget, rawset = wipe, pairs, rawget, rawset
 local setmetatable, hooksecurefunc = setmetatable, hooksecurefunc
+local tconcat, loadstring, xpcall = table.concat, loadstring, xpcall
+local geterrorhandler = geterrorhandler
 
 ---- WOW APIS
 
 local CreateFrame = CreateFrame 
+
+
+--[[
+     xpcall safecall implementation
+]]
+
+local function errorhandler(err)
+    return geterrorhandler()(err)
+end
+
+local function CreateDispatcher(argCount)
+    local code = [[
+        local xpcall, eh = ...
+        local method, ARGS
+        local function call() return method(ARGS) end
+    
+        local function dispatch(func, ...)
+            method = func
+            if not method then return end
+            ARGS = ...
+            return xpcall(call, eh)
+        end
+    
+        return dispatch
+    ]]
+    
+    local ARGS = {}
+    for i = 1, argCount do ARGS[i] = "arg"..i end
+    code = code:gsub("ARGS", tconcat(ARGS, ", "))
+    return assert(loadstring(code, "safecall Dispatcher["..argCount.."]"))(xpcall, errorhandler)
+end
+
+local Dispatchers = setmetatable({}, {__index=function(self, argCount)
+    local dispatcher = CreateDispatcher(argCount)
+    rawset(self, argCount, dispatcher)
+    return dispatcher
+end})
+Dispatchers[0] = function(func)
+    return xpcall(func, errorhandler)
+end
+ 
+local function safecall(func, ...)
+    return Dispatchers[select("#", ...)](func, ...)
+end
 
 -----------------------------
 --                     Object
@@ -41,17 +81,9 @@ end
 local function CreateMeta(class)
     local _Meta = rawget(class, '_Meta') or {}
     _Meta.__index = _Meta.__index or class
-    
+
     rawset(class, '_Meta', _Meta)
     return _Meta
-end
-
-local function Destroy(object)
-    if Class:IsWidget(object) then
-        object:SetParent(nil)
-        object:ClearAllPoints()
-    end
-    wipe(object)
 end
 
 function Object:New(...)
@@ -66,6 +98,9 @@ function Object:New(...)
         ctor(object, ...)
     end
     return object
+end
+
+function Object:Release()
 end
 
 function Object:GetSuper()
@@ -102,6 +137,32 @@ function Object:IsInstance(object)
         return false
     end
     return object:IsType(self)
+end
+
+function Object:IsInherit(class)
+    if not Class:IsClass(self) then
+        error([[bad argument #self to 'IsInstance' (class expected)]], 2)
+    end
+    if not Class:IsClass(class) then
+        return false
+    end
+    return class:IsType(self)
+end
+
+function Object:SetCallback(name, func)
+    if type(func) == 'function' then
+        self.events = self.events or {}
+        self.events[name] = func
+    end
+end
+
+function Object:Fire(name, ...)
+    if self.events and self.events[name] then
+        local success, ret = safecall(self.events[name], self, ...)
+        if success then
+            return ret
+        end
+    end
 end
 
 -----------------------------
