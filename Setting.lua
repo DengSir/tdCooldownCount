@@ -29,7 +29,7 @@ function Setting:Refresh()
 end
 
 function Setting:GetNextUpdate()
-	return NextHelper[self.key](self:GetRemain())
+	return NextHelper[self.style](self:GetRemain())
 end
 
 function Setting:IsStyleChanged()

@@ -15,5 +15,5 @@
     <Include file="LibSharedMedia-3.0\lib.xml"/>
     <Include file="AceGUI-3.0-SharedMediaWidgets\widget.xml"/>
 
-    <Include file="LibClass-1.0\LibClass-1.0.xml"/>
+    <Include file="LibClass-2.0\LibClass-2.0.xml"/>
 </Ui>

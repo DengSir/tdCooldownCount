@@ -1,6 +1,6 @@
 
 
-local tdCC = LibStub('AceAddon-3.0'):NewAddon('tdCC', 'AceEvent-3.0', 'AceHook-3.0', 'LibClass-1.0')
+local tdCC = LibStub('AceAddon-3.0'):NewAddon('tdCC', 'AceEvent-3.0', 'AceHook-3.0', 'LibClass-2.0')
 
 local LibMedia = LibStub('LibSharedMedia-3.0')
 
@@ -118,6 +118,10 @@ function tdCC:OnInitialize()
 
     self.db = LibStub('AceDB-3.0'):New('TDDB_COOLDOWN', defaults, true)
 
+    self.db:RegisterCallback('OnProfileReset', function()
+        self.Timer:RefreshAll()
+    end)
+    
     if self.LoadOptionFrame then
         self:LoadOptionFrame()
     end
@@ -193,9 +197,8 @@ end
 function tdCC:ACTIONBAR_UPDATE_COOLDOWN()
     for cooldown in pairs(actions) do
         local start, duration, enable = GetActionCooldown(cooldown.tdaction)
-        local charges, maxCharges, chargeStart, chargeDuration = GetActionCharges(cooldown.tdaction)
         if enable then
-            self:SetCooldown(cooldown, start, duration, charges, maxCharges)
+            self:SetCooldown(cooldown, start, duration, GetActionCharges(cooldown.tdaction))
         end
     end
 end

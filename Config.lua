@@ -339,11 +339,40 @@ function tdCC:LoadOptionFrame()
         return info
     end
 
+    local charProfileKey = format('%s - %s', UnitName('player'), GetRealmName())
+
     local options = {
         type = 'group',
         name = L['tdCC Options'],
         childGroups = 'tab',
         args = {
+            profile = {
+                type = 'toggle',
+                name = L['Character Specific Settings'],
+                order = makeorder(),
+                set = function(_, checked)
+                    self.db:SetProfile(checked and charProfileKey or 'Default')
+                end,
+                get = function()
+                    return self.db:GetCurrentProfile() == charProfileKey
+                end,
+                width = 'double',
+            },
+            reset = {
+                type = 'execute',
+                name = L['Restore default Settings'],
+                order = makeorder(),
+                confirm = true,
+                confirmText = L['Are you sure you want to restore the current Settings?'],
+                func = function()
+                    self.db:ResetProfile()
+                end
+            },
+            header1 = {
+                type = 'header',
+                name = '',
+                order = makeorder(),
+            },
             action = createTypeGroup(L['Action'], 'Action'),
             buff = createTypeGroup(L['Buff'], 'Buff', true),
             totem = createTypeGroup(L['Totem'], 'Totem', true),
@@ -351,13 +380,9 @@ function tdCC:LoadOptionFrame()
         }
     }
 
-    local profiles = LibStub('AceDBOptions-3.0'):GetOptionsTable(self.db)
-    
     local registry = LibStub('AceConfigRegistry-3.0')
     registry:RegisterOptionsTable('tdCC Options', options)
-    registry:RegisterOptionsTable('tdCC Profiles', profiles)
-    
+
     local dialog = LibStub('AceConfigDialog-3.0')
     dialog:AddToBlizOptions('tdCC Options', 'tdCC')
-    dialog:AddToBlizOptions('tdCC Profiles', L['Profiles'], 'tdCC')
 end
