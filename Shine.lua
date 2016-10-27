@@ -25,16 +25,16 @@ function Shine:Constructor(cooldown)
     local anim = self:CreateAnimationGroup()
     anim:SetLooping('BOUNCE')
     anim:SetScript('OnFinished', animOnFinished)
-    
+
     local grow = anim:CreateAnimation('Scale')
     grow:SetOrigin('CENTER', 0, 0)
     grow:SetOrder(0)
     grow:SetScript('OnFinished', scaleOnFinished)
-    
+
     local icon = self:CreateTexture(nil, 'OVERLAY')
     icon:SetBlendMode('ADD')
     icon:SetAllPoints(self)
-    
+
     self.grow = grow
     self.anim = anim
     self.icon = icon
@@ -67,24 +67,24 @@ function Shine:Start()
     if self.anim:IsPlaying() then
         self.anim:Stop()
     end
-    
+
     self.icon:SetTexture(self:GetIcon())
-    
+
     local width, height = self.cooldown:GetSize()
     local scale = self.set:GetShineScale()
     self:SetSize(width * scale, height * scale)
-    
+
     self.grow:SetScale(1 / scale, 1 / scale)
     self.grow:SetDuration(self.set:GetShineDuration())
-    
+
     self:Show()
     self.anim:Play()
 end
 
 local ICONS = {
-    Round = [[Interface\Cooldown\ping4]],
-    Blizzard = [[Interface\Cooldown\star4]],
-    Explosive = [[Interface\Cooldown\starburst]],
+    ROUND     = [[Interface\Cooldown\ping4]],
+    BLIZZARD  = [[Interface\Cooldown\star4]],
+    EXPLOSIVE = [[Interface\Cooldown\starburst]],
 }
 
 function Shine:GetIcon()
