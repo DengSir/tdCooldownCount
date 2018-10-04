@@ -1,7 +1,7 @@
-﻿## Interface: 60200
+﻿## Interface: 80000
 ## Title: tdCC
 ## Author: DengSir
-## Version: 60200.01
+## Version: 80000.01
 ## SavedVariables: TDDB_COOLDOWN
 
 Load.xml

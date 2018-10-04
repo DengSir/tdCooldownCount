@@ -19,8 +19,10 @@ end
 
 function Shine:Constructor(cooldown)
 	self:SetParent(cooldown:GetParent())
-	self:SetPoint('CENTER')
-	self:SetScript('OnHide', self.OnHide)
+    self:SetFrameStrata('HIGH')
+    self:SetFrameLevel(cooldown:GetParent():GetFrameLevel() + 5)
+	self:SetPoint('CENTER', cooldown, 'CENTER')
+    self:SetScript('OnHide', self.OnHide)
 
     local anim = self:CreateAnimationGroup()
     anim:SetLooping('BOUNCE')

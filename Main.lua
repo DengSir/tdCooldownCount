@@ -121,7 +121,7 @@ function tdCC:OnInitialize()
     self.db:RegisterCallback('OnProfileReset', function()
         self.Timer:RefreshAll()
     end)
-    
+
     if self.LoadOptionFrame then
         self:LoadOptionFrame()
     end
@@ -132,47 +132,26 @@ function tdCC:GetFont(name)
 end
 
 function tdCC:OnEnable()
-    self:RegisterEvent('ACTIONBAR_UPDATE_COOLDOWN')
     self:SecureHook(getmetatable(ActionButton1Cooldown).__index, 'SetCooldown', 'SetCooldown')
-    self:SecureHook('SetActionUIButton', 'SetActionUIButton')
+end
 
-    for i, button in ipairs(ActionBarButtonEventsFrame.frames) do
-        self:SetActionUIButton(button, button.action, button.cooldown)
+function tdCC:SetCooldown(cooldown, start, duration, m)
+    local show, keep = self:ShouldShow(cooldown, start, duration)
+    if keep then
+        return
     end
-end
-
-function tdCC:OnDisable()
-    self:UnhookAll()
-    self:UnregisterAllEvents()
-end
-
-local actions = {}
-local function cooldownOnShow(cooldown)
-    actions[cooldown] = true
-end
-
-local function cooldownOnHide(cooldown)
-    actions[cooldown] = nil
-end
-
-function tdCC:SetActionUIButton(button, action, cooldown)
-    if not cooldown.tdaction then
-        cooldown:HookScript('OnShow', cooldownOnShow)
-        cooldown:HookScript('OnHide', cooldownOnHide)
-    end
-    cooldown.tdaction = action
-end
-
-function tdCC:SetCooldown(cooldown, start, duration, charges, maxCharges)
-    if self:ShouldShow(cooldown, start, duration, charges, maxCharges) then
-        self.Timer:StartTimer(cooldown, start, duration)
+    if show then
+        return self.Timer:StartTimer(cooldown, start, duration)
     else
-        self.Timer:StopTimer(cooldown)
+        return self.Timer:StopTimer(cooldown, start, duration)
     end
 end
 
-function tdCC:ShouldShow(cooldown, start, duration, charges, maxCharges)
+function tdCC:ShouldShow(cooldown, start, duration)
     if cooldown.noCooldownCount then
+        return
+    end
+    if cooldown:IsPaused() then
         return
     end
     if not start or start == 0 then
@@ -188,19 +167,21 @@ function tdCC:ShouldShow(cooldown, start, duration, charges, maxCharges)
     if duration < set.minDuration then
         return
     end
-    if set.hideHaveCharges and charges and charges > 0 then
+    if set.hideHaveCharges and cooldown:GetDrawEdge() then
         return
     end
-    return true
-end
+    local gcdStart, gcdDuration = GetSpellCooldown(61304)
+    if gcdStart == start and gcdDuration == duration then
+        local timer = self.Timer:GetTimer(cooldown)
+        if not timer then
+            return
+        end
 
-function tdCC:ACTIONBAR_UPDATE_COOLDOWN()
-    for cooldown in pairs(actions) do
-        local start, duration, enable = GetActionCooldown(cooldown.tdaction)
-        if enable then
-            self:SetCooldown(cooldown, start, duration, GetActionCharges(cooldown.tdaction))
+        if timer:GetRemain() < gcdDuration + 0.05 then
+            return true, true
         end
     end
+    return true, false
 end
 
 function tdCC:GetCooldownSetting(cooldown)
