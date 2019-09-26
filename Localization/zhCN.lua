@@ -52,6 +52,8 @@ L['Y offset']        = 'Y 坐标'
 
 L['Totem'] = '图腾'
 L['Rune']  = '符文'
+L['WeakAura'] = true
+L['WeakAura Reverse'] = 'WeakAura 反向'
 
 L['Character Specific Settings']                            = '使用角色独立设置'
 L['Restore default Settings']                               = '恢复默认设置'

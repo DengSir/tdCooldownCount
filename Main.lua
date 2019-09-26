@@ -1,5 +1,4 @@
 
-
 local tdCC = LibStub('AceAddon-3.0'):NewAddon('tdCC', 'AceEvent-3.0', 'AceHook-3.0', 'LibClass-2.0')
 
 local LibMedia = LibStub('LibSharedMedia-3.0')
@@ -25,10 +24,10 @@ function tdCC:OnInitialize()
                     yOffset = 0,
 
                     styles = {
-                        SOON   = {r = 1, g = 0.1, b = 0.1, scale = 1},
-                        SECOND = {r = 1, g = 1,   b = 1,   scale = 1},
-                        MINUTE = {r = 1, g = 1,   b = 1,   scale = 1},
-                        HOUR   = {r = 1, g = 1,   b = 1,   scale = 1},
+                        SOON = {r = 1, g = 0.1, b = 0.1, scale = 1},
+                        SECOND = {r = 1, g = 1, b = 1, scale = 1},
+                        MINUTE = {r = 1, g = 1, b = 1, scale = 1},
+                        HOUR = {r = 1, g = 1, b = 1, scale = 1},
                     },
 
                     shine = false,
@@ -50,17 +49,67 @@ function tdCC:OnInitialize()
                     yOffset = 0,
 
                     styles = {
-                        SOON   = {r = 1,   g = 0.1, b = 0.1, scale = 1.2},
-                        SECOND = {r = 1,   g = 1,   b = 1,   scale = 1  },
-                        MINUTE = {r = 0.8, g = 0.6, b = 0,   scale = 1  },
-                        HOUR   = {r = 0.4, g = 0.4, b = 0.4, scale = 1},
+                        SOON = {r = 1, g = 0.1, b = 0.1, scale = 1.2},
+                        SECOND = {r = 1, g = 1, b = 1, scale = 1},
+                        MINUTE = {r = 0.8, g = 0.6, b = 0, scale = 1},
+                        HOUR = {r = 0.4, g = 0.4, b = 0.4, scale = 1},
                     },
 
                     shine = true,
                     shineMinDuration = 10,
                     shineType = 'ICON',
                     shineScale = 4,
-                    shineDuration =  1,
+                    shineDuration = 1,
+                },
+                WeakAura = {
+                    enable = true,
+                    hideBlizModel = false,
+                    mmss = false,
+                    hideHaveCharges = false,
+                    minRatio = 0,
+                    minDuration = 2.2,
+                    startRemain = 0,
+
+                    fontFace = LibMedia:GetDefault('font'),
+                    fontSize = 20,
+                    fontOutline = 'OUTLINE',
+                    anchor = 'CENTER',
+                    xOffset = 0,
+                    yOffset = 0,
+
+                    styles = {
+                        SOON = {r = 0.15, g = 1, b = 0, scale = 1},
+                        SECOND = {r = 0.15, g = 1, b = 1, scale = 1},
+                        MINUTE = {r = 0.8, g = 0.6, b = 0, scale = 1},
+                        HOUR = {r = 0.4, g = 0.4, b = 0.4, scale = 1},
+                    },
+
+                    shine = false,
+                },
+                WeakAuraReverse = {
+                    enable = true,
+                    hideBlizModel = false,
+                    mmss = false,
+                    hideHaveCharges = false,
+                    minRatio = 0,
+                    minDuration = 2.2,
+                    startRemain = 0,
+
+                    fontFace = LibMedia:GetDefault('font'),
+                    fontSize = 20,
+                    fontOutline = 'OUTLINE',
+                    anchor = 'CENTER',
+                    xOffset = 0,
+                    yOffset = 0,
+
+                    styles = {
+                        SOON = {r = 0.15, g = 1, b = 0, scale = 1},
+                        SECOND = {r = 0.15, g = 1, b = 1, scale = 1},
+                        MINUTE = {r = 0.8, g = 0.6, b = 0, scale = 1},
+                        HOUR = {r = 0.4, g = 0.4, b = 0.4, scale = 1},
+                    },
+
+                    shine = false,
                 },
                 Totem = {
                     enable = false,
@@ -79,10 +128,10 @@ function tdCC:OnInitialize()
                     yOffset = 0,
 
                     styles = {
-                        SOON   = {r = 1, g = 1, b = 1, scale = 1},
+                        SOON = {r = 1, g = 1, b = 1, scale = 1},
                         SECOND = {r = 1, g = 1, b = 1, scale = 1},
                         MINUTE = {r = 1, g = 1, b = 1, scale = 1},
-                        HOUR   = {r = 1, g = 1, b = 1, scale = 1},
+                        HOUR = {r = 1, g = 1, b = 1, scale = 1},
                     },
 
                     shine = false,
@@ -104,15 +153,15 @@ function tdCC:OnInitialize()
                     yOffset = 0,
 
                     styles = {
-                        SOON   = {r = 1, g = 1, b = 1, scale = 1},
+                        SOON = {r = 1, g = 1, b = 1, scale = 1},
                         SECOND = {r = 1, g = 1, b = 1, scale = 1},
                         MINUTE = {r = 1, g = 1, b = 1, scale = 1},
-                        HOUR   = {r = 1, g = 1, b = 1, scale = 1},
+                        HOUR = {r = 1, g = 1, b = 1, scale = 1},
                     },
 
                     shine = false,
-                }
-            }
+                },
+            },
         },
     }
 
@@ -196,15 +245,20 @@ local function GetCooldownType(cooldown)
             return 'Totem'
         elseif name:find('^RuneButtonIndividual') then
             return 'Rune'
+        elseif name:find('^WeakAura') then
+            return cooldown:GetReverse() and 'WeakAuraReverse' or 'WeakAura'
         end
     end
     return cooldown:GetReverse() and 'Buff' or 'Action'
 end
 
-local TypeCache = setmetatable({}, {__index = function(o, cooldown)
-    o[cooldown] = GetCooldownType(cooldown)
-    return o[cooldown]
-end})
+local TypeCache = setmetatable({}, {
+    __index = function(o, cooldown)
+        o[cooldown] = GetCooldownType(cooldown)
+        print(cooldown, o[cooldown])
+        return o[cooldown]
+    end,
+})
 
 function tdCC:GetCooldownType(cooldown)
     return TypeCache[cooldown]

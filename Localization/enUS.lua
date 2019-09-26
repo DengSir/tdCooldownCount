@@ -47,6 +47,8 @@ L['Y offset']                          = true
 
 L['Totem'] = true
 L['Rune'] = true
+L['WeakAura'] = true
+L['WeakAura Reverse'] = true
 
 L['Character Specific Settings']                            = true
 L['Restore default Settings']                               = true

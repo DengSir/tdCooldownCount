@@ -376,7 +376,9 @@ function tdCC:LoadOptionFrame()
             action = createTypeGroup(L['Action'], 'Action'),
             buff = createTypeGroup(L['Buff'], 'Buff', true),
             totem = createTypeGroup(L['Totem'], 'Totem', true),
-            rune = createTypeGroup(L['Rune'], 'Rune', true)
+            rune = createTypeGroup(L['Rune'], 'Rune', true),
+            wa = createTypeGroup(L['WeakAura'], 'WeakAura', true),
+            war = createTypeGroup(L['WeakAura Reverse'], 'WeakAuraReverse', true),
         }
     }
 
