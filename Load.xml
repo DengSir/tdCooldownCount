@@ -2,6 +2,7 @@
 ..\FrameXML\UI.xsd">
     <Include file="Libs\Embeds.xml" />
     <Include file="Localization\Localization.xml" />
+    <Script file="Api.lua" />
     <Script file="Addon.lua" />
     <!-- <Script file="Setting.lua" /> -->
     <Script file="Timer.lua" />

@@ -14,45 +14,13 @@ ns.Addon = Addon
 ns.L = L
 
 function Addon:OnInitialize()
-    local order = 0
-    local function orderGen()
-        order = order + 1
-        return order
-    end
-
     local defaults = {
         profile = {
+            first = true,
             themes = {
-                aura = {
-                    name = L['Aura'],
+                Default = {
                     enable = true,
-                    hideBlizModel = true,
-                    mmss = false,
-                    hideHaveCharges = false,
-                    minRatio = 0,
-                    minDuration = 0,
-                    startRemain = 0,
-
-                    fontFace = LibMedia:GetDefault('font'),
-                    fontSize = 26,
-                    fontStyle = 'OUTLINE',
-                    point = 'CENTER',
-                    relativePoint = 'TOPRIGHT',
-                    xOffset = 0,
-                    yOffset = 0,
-
-                    styles = {
-                        SOON = {r = 1, g = 0.1, b = 0.1, scale = 1},
-                        SECOND = {r = 1, g = 1, b = 1, scale = 1},
-                        MINUTE = {r = 1, g = 1, b = 1, scale = 1},
-                        HOUR = {r = 1, g = 1, b = 1, scale = 1},
-                    },
-
-                    shine = false,
-                },
-                action = {
-                    name = L['Action'],
-                    enable = true,
+                    locked = true,
                     hideBlizModel = false,
                     mmss = false,
                     hideHaveCharges = false,
@@ -69,10 +37,10 @@ function Addon:OnInitialize()
                     yOffset = 0,
 
                     styles = {
-                        SOON = {r = 1, g = 0.1, b = 0.1, scale = 1.2},
-                        SECOND = {r = 1, g = 1, b = 1, scale = 1},
-                        MINUTE = {r = 0.8, g = 0.6, b = 0, scale = 1},
-                        HOUR = {r = 0.4, g = 0.4, b = 0.4, scale = 1},
+                        SOON = {color = {r = 1, g = 0.1, b = 0.1}, scale = 1.2},
+                        SECOND = {color = {r = 1, g = 1, b = 1}, scale = 1},
+                        MINUTE = {color = {r = 0.8, g = 0.6, b = 0}, scale = 1},
+                        HOUR = {color = {r = 0.4, g = 0.4, b = 0.4}, scale = 1},
                     },
 
                     shine = true,
@@ -81,61 +49,10 @@ function Addon:OnInitialize()
                     shineScale = 4,
                     shineDuration = 0.6,
                 },
-                BigDebuff = {
-                    enable = true,
-                    hideBlizModel = false,
-                    mmss = false,
-                    hideHaveCharges = false,
-                    minRatio = 0,
-                    minDuration = 2.2,
-                    startRemain = 0,
-
-                    fontFace = LibMedia:GetDefault('font'),
-                    fontSize = 20,
-                    fontStyle = 'OUTLINE',
-                    point = 'CENTER',
-                    relativePoint = 'CENTER',
-                    xOffset = 0,
-                    yOffset = 0,
-
-                    styles = {
-                        SOON = {r = 1, g = 0.1, b = 0.1, scale = 1.2},
-                        SECOND = {r = 1, g = 1, b = 1, scale = 1},
-                        MINUTE = {r = 0.8, g = 0.6, b = 0, scale = 1},
-                        HOUR = {r = 0.4, g = 0.4, b = 0.4, scale = 1},
-                    },
-
-                    shine = false,
-                },
             },
-            rules = {
-                BigDebuff = {
-                    priority = orderGen(),
-                    theme = 'BigDebuff',
-                    rule = [[
-function(cooldown)
-    return cooldown:GetName():find('BigDebuff')
-end]],
-                },
-                Aura = {
-                    name = L['Aura'],
-                    priority = orderGen(),
-                    theme = 'aura',
-                    rule = [[
-function(cooldown)
-    return cooldown:GetReverse()
-end]],
-                },
-                Default = {name = DEFAULT, priority = orderGen(), theme = 'action'},
-            },
+            rules = {},
         },
     }
-
-    ---@class Rule
-    ---@field name string
-    ---@field theme string
-    ---@field priority number
-    ---@field rule fun(cooldown:Cooldown): boolean
 
     ---@type Rule[]
     self.rules = {}
@@ -148,27 +65,110 @@ end]],
                     return rule.theme
                 end
             end
+            return 'Default'
         end,
     })
 
     self.db = LibStub('AceDB-3.0'):New('TDDB_COOLDOWN', defaults, true)
 
-    self:InitRules()
-
     self.db:RegisterCallback('OnProfileReset', function()
+        self:SetupDefault()
+        self:UpdateRules()
+        ns.Option:Update()
         ns.Timer:RefreshAll()
     end)
+
+    self:SetupDefault()
 
     if self.LoadOptionFrame then
         self:LoadOptionFrame()
     end
 end
 
+function Addon:OnEnable()
+    self:UpdateRules()
+
+    self:SecureHook(getmetatable(ActionButton1Cooldown).__index, 'SetCooldown', 'SetCooldown')
+end
+
+function Addon:SetupDefault()
+    if not self.db.profile.first then
+        return
+    end
+
+    self.db.profile.first = false
+
+    self.db.profile.themes.BigAura = {
+        enable = true,
+        hideBlizModel = false,
+        mmss = false,
+        hideHaveCharges = false,
+        minRatio = 0,
+        minDuration = 2.2,
+        startRemain = 0,
+
+        fontFace = LibMedia:GetDefault('font'),
+        fontSize = 20,
+        fontStyle = 'OUTLINE',
+        point = 'CENTER',
+        relativePoint = 'CENTER',
+        xOffset = 0,
+        yOffset = 0,
+
+        styles = {
+            SOON = {color = {r = 1, g = 0.1, b = 0.1}, scale = 1.2},
+            SECOND = {color = {r = 1, g = 1, b = 1}, scale = 1},
+            MINUTE = {color = {r = 0.8, g = 0.6, b = 0}, scale = 1},
+            HOUR = {color = {r = 0.4, g = 0.4, b = 0.4}, scale = 1},
+        },
+
+        shine = false,
+    }
+
+    self.db.profile.themes.Aura = {
+        enable = true,
+        hideBlizModel = true,
+        mmss = false,
+        hideHaveCharges = false,
+        minRatio = 0,
+        minDuration = 0,
+        startRemain = 0,
+
+        fontFace = LibMedia:GetDefault('font'),
+        fontSize = 20,
+        fontStyle = 'OUTLINE',
+        point = 'CENTER',
+        relativePoint = 'TOPRIGHT',
+        xOffset = 0,
+        yOffset = 0,
+
+        styles = {
+            SOON = {color = {r = 1, g = 0.1, b = 0.1}, scale = 1},
+            SECOND = {color = {r = 1, g = 1, b = 1}, scale = 1},
+            MINUTE = {color = {r = 1, g = 1, b = 1}, scale = 1},
+            HOUR = {color = {r = 1, g = 1, b = 1}, scale = 1},
+        },
+
+        shine = false,
+    }
+
+    self.db.profile.rules.BigAura = {
+        priority = 1,
+        theme = 'BigAura',
+        rule = 'function(cooldown)\n    return cooldown:GetReverse() and cooldown:GetWidth() > 30\nend',
+    }
+    self.db.profile.rules.Aura = {
+        priority = 2,
+        theme = 'Aura',
+        rule = 'function(cooldown)\n    return cooldown:GetReverse()\nend',
+    }
+end
+
 local function AlwaysTrue()
     return true
 end
 
-function Addon:InitRules()
+function Addon:UpdateRules()
     local rules = wipe(self.rules)
 
     for k, v in pairs(self.db.profile.rules) do
@@ -191,10 +191,6 @@ end
 
 function Addon:GetFont(name)
     return LibMedia:Fetch('font', name)
-end
-
-function Addon:OnEnable()
-    self:SecureHook(getmetatable(ActionButton1Cooldown).__index, 'SetCooldown', 'SetCooldown')
 end
 
 function Addon:SetCooldown(cooldown, start, duration, m)
@@ -248,7 +244,7 @@ end
 
 function Addon:GetCooldownProfile(cooldown)
     local theme = self:GetCooldownTheme(cooldown)
-    return theme and self.db.profile.themes[theme]
+    return theme and self.db.profile.themes[theme] or self.db.profile.themes.Default
 end
 
 function Addon:GetCooldownTheme(cooldown)

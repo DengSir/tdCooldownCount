@@ -12,11 +12,14 @@
 ---@field ratio number
 ---@field fontReady boolean
 
----@class RemainStyle
+---@class Color
 ---@field r number
 ---@field g number
 ---@field b number
 ---@field a number
+
+---@class RemainStyle
+---@field color Color
 ---@field scale number
 
 ---@class Theme
@@ -34,3 +37,9 @@
 ---@field yOffset number
 ---@field styles table<string, RemainStyle>
 ---@field shine boolean
+
+---@class Rule
+---@field name string
+---@field theme string
+---@field priority number
+---@field rule fun(cooldown:Cooldown): boolean

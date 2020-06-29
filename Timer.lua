@@ -84,6 +84,8 @@ function Timer:Start(start, duration)
         return
     else
         self.cooldown:SetAlpha(self.profile.hideBlizModel and 0 or 1)
+
+        self.text:ClearAllPoints()
         self.text:SetPoint(self.profile.point, self, self.profile.relativePoint, self.profile.xOffset,
                            self.profile.yOffset)
 
@@ -144,7 +146,8 @@ local function GetStyle(remain)
     elseif remain < SECOND then
         return 'SECOND'
     elseif remain < SHORT then
-        return self:GetMMSS() and 'SHORT' or 'MINUTE'
+        -- return self:GetMMSS() and 'SHORT' or 'MINUTE'
+        return 'SHORT'
     elseif remain < MINUTE then
         return 'MINUTE'
     elseif remain < HOUR then
@@ -200,9 +203,11 @@ function Timer:Update()
     end
 
     if self.fontReady then
-        self.text:Show()
+        local color = self.styleProfile.color
+        self.text:SetTextColor(color.r, color.g, color.b, color.a)
         self.text:SetText(TextHelper[self.style](remain))
-        self.text:SetTextColor(self.styleProfile.r, self.styleProfile.g, self.styleProfile.b, self.styleProfile.a)
+        self.text:Show()
+
         self:SetNextUpdate(NextHelper[self.style](remain))
     else
         self:SetNextUpdate(0.1)
