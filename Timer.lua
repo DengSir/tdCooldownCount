@@ -1,20 +1,28 @@
+-- Timer.lua
+-- @Author : Dencer (tdaddon@163.com)
+-- @Link   : https://dengsir.github.io
+-- @Date   : 6/29/2020, 12:37:45 PM
 
-local tdCC = LibStub('AceAddon-3.0'):GetAddon('tdCC')
+---@type ns
+local ns = select(2, ...)
 
-local Setting = tdCC:GetClass('Setting')
-local Timer = tdCC:NewClass('Timer', 'Frame')
+---@type Timer
+local Timer = ns.Addon:NewClass('Timer', 'Frame')
 LibStub('AceTimer-3.0'):Embed(Timer)
 
-tdCC.Timer = Timer
+ns.Timer = Timer
+
+local TextHelper = {}
+local NextHelper = {}
 
 local timers = {}
 
 local function cooldownOnHide(cooldown)
-    Timer:StopTimer(cooldown)
+    return Timer:StopTimer(cooldown)
 end
 
 local function cooldownOnSizeChanged(cooldown)
-    Timer:GetTimer(cooldown):RefreshConfig()
+    return Timer:GetTimer(cooldown):RefreshConfig()
 end
 
 function Timer:Constructor(cooldown)
@@ -23,8 +31,9 @@ function Timer:Constructor(cooldown)
     self:SetPoint('CENTER')
 
     self.text = self:CreateFontString(nil, 'OVERLAY')
+    self.text:SetFont(STANDARD_TEXT_FONT, 14)
+
     self.cooldown = cooldown
-    self.set = Setting:New(self)
 
     self:UpdateSize(cooldown:GetSize())
 
@@ -58,6 +67,7 @@ end
 
 function Timer:RefreshConfig()
     self:UpdateSize(self.cooldown:GetSize())
+
     if self.start then
         self:Start(self.start, self.duration)
     end
@@ -66,18 +76,22 @@ end
 ---- method
 
 function Timer:Start(start, duration)
-    self.set:Refresh()
+    self.profile = ns.Addon:GetCooldownProfile(self.cooldown)
 
     if not self.ratio or self.ratio == 0 then
 
-    elseif self.ratio < self.set:GetMinRatio() then
+    elseif self.ratio < self.profile.minRatio then
         return
     else
-        self:UpdateBlizModel()
-        self:UpdatePosition()
+        self.cooldown:SetAlpha(self.profile.hideBlizModel and 0 or 1)
+        self.text:SetPoint(self.profile.point, self, self.profile.relativePoint, self.profile.xOffset,
+                           self.profile.yOffset)
+
         self:SetNextUpdate(start - GetTime())
     end
 
+    self.style = nil
+    self.styleProfile = nil
     self.fontReady = nil
     self.start = start
     self.duration = duration
@@ -91,11 +105,11 @@ function Timer:Stop()
     if self.fontReady then
         self.text:SetText('')
     end
-    
+
     self.start = nil
     self.duration = nil
     self.fontReady = nil
-    
+
     self.cooldown:SetAlpha(1)
 
     self:Hide()
@@ -113,14 +127,45 @@ function Timer:SetNextUpdate(nextUpdate)
     self:ScheduleTimer('Update', nextUpdate)
 end
 
+local SOON, SECOND, SHORT, MINUTE, HOUR, DAY = 10, 60, 600, 3600, 86400
+
+local STYLE_DB_KEYS = {
+    SOON = 'SOON',
+    SECOND = 'SECOND',
+    SHORT = 'MINUTE',
+    MINUTE = 'MINUTE',
+    HOUR = 'HOUR',
+    DAY = 'HOUR',
+}
+
+local function GetStyle(remain)
+    if remain < SOON then
+        return 'SOON'
+    elseif remain < SECOND then
+        return 'SECOND'
+    elseif remain < SHORT then
+        return self:GetMMSS() and 'SHORT' or 'MINUTE'
+    elseif remain < MINUTE then
+        return 'MINUTE'
+    elseif remain < HOUR then
+        return 'HOUR'
+    else
+        return 'DAY'
+    end
+end
+
 function Timer:Update()
     local now = GetTime()
+    local remain = self.start + self.duration - now
+    local startRemain = self.profile.startRemain
+
+    self.remain = remain
+
     if self.start > now then
         self:SetNextUpdate(self.start - now)
         return
     end
 
-    local remain, startRemain = self:GetRemain(), self.set:GetStartRemain()
     if startRemain > 0 and startRemain < remain then
         self.text:Hide()
         self:SetNextUpdate(remain - startRemain)
@@ -128,44 +173,46 @@ function Timer:Update()
     end
 
     if remain < 0.2 then
-        self:Shine()
+        -- self:Shine()
         self:Stop()
         return
     end
 
-    self:UpdateStyle()
-    self:UpdateText()
-    self:SetNextUpdate(self.set:GetNextUpdate())
+    local style = GetStyle(remain)
+    local styleChanged = false
+    if style ~= self.style then
+        self.style = style
+        print(style)
+        self.styleProfile = self.profile.styles[STYLE_DB_KEYS[style]]
+        styleChanged = true
+    end
+
+    if styleChanged or not self.fontReady then
+        local fontFace = ns.Addon:GetFont(self.profile.fontFace)
+        local fontStyle = self.profile.fontStyle
+        local fontSize = self.profile.fontSize * self.ratio * self.styleProfile.scale
+
+        self.fontReady = self.text:SetFont(fontFace, fontSize, fontStyle)
+
+        if not self.fontReady then
+            self.fontReady = self.text:SetFont(STANDARD_TEXT_FONT, fontSize, fontStyle)
+        end
+    end
+
+    if self.fontReady then
+        self.text:Show()
+        self.text:SetText(TextHelper[self.style](remain))
+        self.text:SetTextColor(self.styleProfile.r, self.styleProfile.g, self.styleProfile.b, self.styleProfile.a)
+        self:SetNextUpdate(NextHelper[self.style](remain))
+    else
+        self:SetNextUpdate(0.1)
+    end
 end
 
 function Timer:UpdateSize(width, height)
     self.width = width
     self.ratio = floor(width + 0.5) / 36
     self:SetSize(width, height)
-end
-
-function Timer:UpdateBlizModel()
-    self.cooldown:SetAlpha(self.set:IsHideBlizModel() and 0 or 1)
-end
-
-function Timer:UpdatePosition()
-    self.text:SetPoint('CENTER', self, self.set:GetPositionArgs())
-end
-
-function Timer:UpdateStyle()
-    if self.set:IsStyleChanged() or not self.fontReady then
-        self.fontReady = self.text:SetFont(self.set:GetFontArgs())
-    end
-end
-
-function Timer:UpdateText()
-    if not self.fontReady then
-        return
-    end
-
-    self.text:Show()
-    self.text:SetText(self.set:GetTimeText())
-    self.text:SetTextColor(self.set:GetTimeColor())
 end
 
 function Timer:Shine()
@@ -175,5 +222,49 @@ function Timer:Shine()
     if self.set:GetShineMinDuration() >= self.duration then
         return
     end
-    tdCC.Shine:StartShine(self.cooldown, self.set)
+    ns.Addon.Shine:StartShine(self.cooldown, self.set)
+end
+
+---- TextHelper
+
+function TextHelper.SOON(remain)
+    return ('%d'):format(ceil(remain))
+end
+TextHelper.SECOND = TextHelper.SOON
+
+function TextHelper.SHORT(remain)
+    remain = ceil(remain)
+    return ('%d:%02d'):format(floor(remain / SECOND), ceil(remain % SECOND))
+end
+
+function TextHelper.MINUTE(remain)
+    return ('%dm'):format(ceil(remain / SECOND))
+end
+
+function TextHelper.HOUR(remain)
+    return ('%dh'):format(ceil(remain / MINUTE))
+end
+
+function TextHelper.DAY(remain)
+    return ('%dd'):format(ceil(remain / HOUR))
+end
+
+---- NextHelper
+
+function NextHelper.SOON(remain)
+    return remain - floor(remain)
+end
+NextHelper.SECOND = NextHelper.SOON
+NextHelper.SHORT = NextHelper.SOON
+
+function NextHelper.MINUTE(remain)
+    return remain % SECOND
+end
+
+function NextHelper.HOUR(remain)
+    return remain % MINUTE
+end
+
+function NextHelper.DAY(remain)
+    return remain % HOUR
 end

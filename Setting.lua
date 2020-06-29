@@ -25,7 +25,7 @@ end
 function Setting:Refresh()
 	self.style = nil
 	self.key = nil
-	self.type = tdCC:GetCooldownType(self.cooldown)
+	self.theme = tdCC:GetCooldownTheme(self.cooldown)
 end
 
 function Setting:GetNextUpdate()
@@ -63,7 +63,7 @@ function Setting:GetRemain()
 end
 
 function Setting:GetProfile()
-	return tdCC.db.profile.types[self.type]
+	return tdCC.db.profile.themes[self.theme]
 end
 
 function Setting:GetStyleProfile()
@@ -76,7 +76,7 @@ end
 
 function Setting:GetTimeColor()
 	local color = self:GetStyleProfile()
-	return color.r, color.g, color.b
+	return color.r, color.g, color.b, 0.8
 end
 
 function Setting:GetTimeScale()
