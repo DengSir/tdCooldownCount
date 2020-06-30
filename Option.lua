@@ -16,22 +16,6 @@ local Rules = {}
 local Themes = {}
 local ThemesDropdown = {}
 
-local function tvalues(t)
-    local r = {}
-    for k, v in pairs(t) do
-        tinsert(r, v)
-    end
-    return r
-end
-
-local function tcount(t)
-    local count = 0
-    for k, v in pairs(t) do
-        count = count + 1
-    end
-    return count
-end
-
 local orderGen = ns.orderGenerater()
 
 local function getOptionRule(item)
@@ -50,6 +34,10 @@ end
 
 local function fullToggle(name)
     return {type = 'toggle', name = name, width = 'full', order = orderGen()}
+end
+
+local function doubleToggle(name)
+    return {type = 'toggle', name = name, width = 'double', order = orderGen()}
 end
 
 local function range(name, min, max, step)
@@ -83,11 +71,15 @@ end
 
 local function point(name)
     return drop(name, {
-        {name = L['TOPLEFT'], value = 'TOPLEFT'}, {name = L['TOP'], value = 'TOP'},
-        {name = L['TOPRIGHT'], value = 'TOPRIGHT'}, {name = L['LEFT'], value = 'LEFT'},
-        {name = L['CENTER'], value = 'CENTER'}, {name = L['RIGHT'], value = 'RIGHT'},
-        {name = L['BOTTOMLEFT'], value = 'BOTTOMLEFT'}, {name = L['BOTTOM'], value = 'BOTTOM'},
-        {name = L['BOTTOMRIGHT'], value = 'BOTTOMRIGHT'},
+        {name = L['TOPLEFT'], value = 'TOPLEFT'}, --
+        {name = L['TOP'], value = 'TOP'}, --
+        {name = L['TOPRIGHT'], value = 'TOPRIGHT'}, --
+        {name = L['LEFT'], value = 'LEFT'}, --
+        {name = L['CENTER'], value = 'CENTER'}, --
+        {name = L['RIGHT'], value = 'RIGHT'}, --
+        {name = L['BOTTOMLEFT'], value = 'BOTTOMLEFT'}, --
+        {name = L['BOTTOM'], value = 'BOTTOM'}, --
+        {name = L['BOTTOMRIGHT'], value = 'BOTTOMRIGHT'}, --
     })
 end
 
@@ -116,12 +108,24 @@ local function header(name)
 end
 
 local function add(name, set)
-    return {type = 'input', name = name, order = orderGen(), set = set}
+    return {
+        type = 'input',
+        name = name,
+        order = orderGen(),
+        width = 'double',
+        set = function(_, value)
+            value = value:trim()
+            if value == '' then
+                return
+            end
+            set(value)
+        end,
+    }
 end
 
 local Options = {
     type = 'group',
-    name = L['tdCC Options'],
+    name = 'tdCC',
     childGroups = 'tab',
     args = {
         themes = {type = 'group', name = L['Themes'], order = 1, args = Themes},
@@ -129,15 +133,15 @@ local Options = {
     },
 }
 
-local RulesFixed = { --
-    __add__ = add(L['Add rule'], function(_, value)
-        return Option:AddRule(value)
+local ThemesFixed = { --
+    __add__ = add(L['Add theme'], function(name)
+        return Option:AddTheme(name)
     end),
 }
 
-local ThemesFixed = { --
-    __add__ = add(L['Add theme'], function(_, value)
-        return Option:AddTheme(value)
+local RulesFixed = { --
+    __add__ = add(L['Add rule'], function(name)
+        return Option:AddRule(name)
     end),
 }
 
@@ -161,16 +165,21 @@ local ThemeOption = {
             type = 'execute',
             name = DELETE,
             order = orderGen(),
-            func = function()
-
+            width = 'half',
+            confirm = true,
+            confirmText = RED_FONT_COLOR:WrapTextInColorCode(L['ARE YOU SURE TO DELETE THEME ?']),
+            func = function(item)
+                return Option:RemoveTheme(select(2, getOptionTheme(item)))
             end,
             disabled = function(item)
                 return getOptionTheme(item).locked
             end,
         },
-        general = group(L['GENERAL']){ --
-            hideBlizModel = fullToggle(L['Hide blizz cooldown model']),
-            startRemain = fullRange(L['Remaining how long after the start timer'], 0, 600, 1),
+        general = group(GENERAL){ --
+            hideBlizModel = fullToggle(L['Hide blizzard cooldown model']),
+            minDuration = fullRange(L['Minimum cooldown duration to counting'], 0, 10, 0.1),
+            startRemain = fullRange(L['Start counting after remaining cooldown time'], 0, 3600, 1),
+            shortLimit = fullRange(L['Start with MM:SS counting after remaing cooldown time'], 0, 600, 1),
         },
         font = group(L['Font & Position']){
             fontFace = {
@@ -181,21 +190,20 @@ local ThemeOption = {
                 values = AceGUIWidgetLSMlists.font,
             },
             fontStyle = drop(L['Font style'], {
-                {name = L['NONE'], value = ''}, --
+                {name = NONE, value = ''}, --
                 {name = L['OUTLINE'], value = 'OUTLINE'}, --
-                {name = L['THINKOUTLINE'], value = 'THINKOUTLINE'}, --
+                {name = L['THICKOUTLINE'], value = 'THICKOUTLINE'}, --
             }),
             fontSize = fullRange(L['Font size'], 7, 40, 1),
 
-            point = point(L['Point']),
+            point = point(L['Anchor']),
             relativePoint = point(L['Relative point']),
-            xOffset = fullRange(L['xOffset'], -200, 200, 1),
-            yOffset = fullRange(L['yOffset'], -200, 200, 1),
+            xOffset = fullRange(L['X offset'], -200, 200, 1),
+            yOffset = fullRange(L['Y offset'], -200, 200, 1),
         },
         style = {
             type = 'group',
             name = L['Color & Scale'],
-            -- childGroups = 'tree',
             get = function(item)
                 local db = getOptionTheme(item).styles[item[4]][item[#item]]
                 if item.type == 'color' then
@@ -246,9 +254,11 @@ local RuleOption = {
             type = 'execute',
             name = DELETE,
             order = orderGen(),
+            width = 'half',
+            confirm = true,
+            confirmText = RED_FONT_COLOR:WrapTextInColorCode(L['ARE YOU SURE TO DELETE RULE ?']),
             func = function(item)
-                local k = select(2, getOptionRule(item))
-                Option:RemoveRule(k)
+                return Option:RemoveRule(select(2, getOptionRule(item)))
             end,
             disabled = function(item)
                 return getOptionRule(item).locked
@@ -256,7 +266,7 @@ local RuleOption = {
         },
         priority = {
             type = 'range',
-            name = 'priority',
+            name = L['Priority'],
             order = orderGen(),
             width = 'full',
             min = 0,
@@ -337,7 +347,7 @@ function Option:SetRulePriority(rule, value)
 end
 
 function Option:UpdateRulesPriority()
-    local rules = tvalues(ns.Addon.db.profile.rules)
+    local rules = ns.tvalues(ns.Addon.db.profile.rules)
 
     sort(rules, function(a, b)
         return a.priority < b.priority
@@ -349,15 +359,16 @@ function Option:UpdateRulesPriority()
 end
 
 function Option:AddRule(name)
-    name = name:trim()
-
     local rules = ns.Addon.db.profile.rules
-    local count = tcount(rules)
+    if rules[name] then
+        return
+    end
 
+    local count = ns.tcount(rules)
     rules[name] = {name = name, theme = 'Default', priority = count + 1}
 
-    self:SetRulePriority(rules[name], count)
     self:Update()
+    self:ApplyRules()
 end
 
 function Option:RemoveRule(name)
@@ -366,6 +377,21 @@ function Option:RemoveRule(name)
     self:UpdateRulesPriority()
     self:Update()
     self:ApplyRules()
+end
+
+function Option:AddTheme(name)
+    local themes = ns.Addon.db.profile.themes
+    if themes[name] then
+        return
+    end
+    themes[name] = ns.CreateThemeData()
+    self:Update()
+end
+
+function Option:RemoveTheme(name)
+    ns.Addon.db.profile.themes[name] = nil
+    self:Update()
+    self:ApplyThemes()
 end
 
 function Option:ApplyRules()

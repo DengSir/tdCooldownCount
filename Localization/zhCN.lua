@@ -1,60 +1,59 @@
 
 local L = LibStub('AceLocale-3.0'):NewLocale('tdCC', 'zhCN')
 if not L then
-	return
+    return
 end
 
-L['tdCC Options'] = '太多冷却设置'
-L['Action']       = '动作条'
-L['Buff']         = true
-L['Profiles']     = '配置'
+-- @import@
+L['Themes'] = '主题'
+L['Add theme'] = '添加主题'
 
-L['Hide blizz cooldown model']                 = '隐藏暴雪冷却模型'
-L['Hide timer when has charges']               = '技能可用时不显示冷却计时'
-L['Minimum duration to display text as MM:SS'] = '低于10分钟的计时以 MM:SS 格式来显示'
-L['Remaining how long after the start timer']  = '剩余多长时间后开始计时'
-L['Minimum duration to display text']          = '允许计时的最小冷却时间'
-L['Minimum size to display text']              = '允许计时的最小大小'
-
-L['Style']                             = '风格'
-L['Soon']                              = '即将完成'
-L['Second']                            = '秒'
-L['Minute']                            = '分钟'
-L['Hour']                              = '小时'
-L['Font face']                         = '字体'
-L['Font size']                         = '字体大小'
-L['Anchor']                            = '锚点'
-L['Top Left']                          = '左上'
-L['Top']                               = '上'
-L['Top Right']                         = '右上'
-L['Left']                              = '左'
-L['Center']                            = '中'
-L['Right']                             = '右'
-L['Bottom Left']                       = '左下'
-L['Bottom']                            = '下'
-L['Bottom Right']                      = '右下'
-L['Shine']                             = '闪光'
-L['Minimum duration to display shine'] = '允许闪光的最小冷却时间'
-L['Shine scale']                       = '闪光大小'
-L['Shine duration']                    = '闪光持续时间'
-L['Shine alpha']                       = '闪光透明度'
-
-L['Shine class'] = '闪光样式'
-L['Icon']        = '图标'
-L['Blizzard']    = '暴雪'
-L['Round']       = '圆形'
-L['Explosive']   = '爆炸'
-L['Action Bar']  = '动作条'
+L['Hide blizzard cooldown model'] = '隐藏暴雪冷却模型'
+L['Minimum cooldown duration to counting'] = '显示计数的最短冷却时间'
+L['Start counting after remaining cooldown time'] = '在剩余冷却时间后开始计数'
+L['Start with MM:SS counting after remaing cooldown time'] = '在剩余冷却时间后以MM:SS计数'
 
 L['Font & Position'] = '字体和位置'
-L['X offset']        = 'X 坐标'
-L['Y offset']        = 'Y 坐标'
+L['Font face'] = '字体'
+L['Font style'] = '字体样式'
+L['Font size'] = '字号'
 
-L['Totem'] = '图腾'
-L['Rune']  = '符文'
-L['WeakAura'] = true
-L['WeakAura Reverse'] = 'WeakAura 反向'
+L['Anchor'] = '锚点'
+L['Relative point'] = '对齐到'
+L['X offset'] = 'X偏移'
+L['Y offset'] = 'Y偏移'
 
-L['Character Specific Settings']                            = '使用角色独立设置'
-L['Restore default Settings']                               = '恢复默认设置'
-L['Are you sure you want to restore the current Settings?'] = '你确定要重置当前设置吗？'
+L['Color & Scale'] = '颜色和缩放'
+L['Soon'] = '即将完成'
+L['Second'] = '秒'
+L['Minute'] = '分钟'
+L['Hour'] = '小时'
+L['Scale'] = '缩放'
+L['Color'] = '颜色'
+
+L['Rules'] = '规则'
+L['Add rule'] = '添加规则'
+
+L['Priority'] = '优先级'
+L['Theme'] = '主题'
+L['Rule'] = '规则'
+
+L['OUTLINE'] = '描边'
+L['THICKOUTLINE'] = '粗描边'
+
+L['TOPLEFT'] = '左上'
+L['TOP'] = '上'
+L['TOPRIGHT'] = '右上'
+L['LEFT'] = '左'
+L['CENTER'] = '中间'
+L['RIGHT'] = '右'
+L['BOTTOMLEFT'] = '左下'
+L['BOTTOM'] = '下'
+L['BOTTOMRIGHT'] = '右下'
+
+L['ARE YOU SURE TO DELETE THEME ?'] = '你确定要删除主题吗？'
+L['ARE YOU SURE TO DELETE RULE ?'] = '你确定要删除规则吗？'
+
+L['Aura'] = '光环'
+L['Big aura'] = '大型光环'
+-- @end-import@

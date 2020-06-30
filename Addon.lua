@@ -6,7 +6,6 @@
 ---@type ns
 local ns = select(2, ...)
 
-local LibMedia = LibStub('LibSharedMedia-3.0')
 local L = LibStub('AceLocale-3.0'):GetLocale('tdCC')
 
 local Addon = LibStub('AceAddon-3.0'):NewAddon('tdCC', 'AceEvent-3.0', 'AceHook-3.0', 'LibClass-2.0')
@@ -15,39 +14,13 @@ ns.L = L
 
 function Addon:OnInitialize()
     local defaults = {
-        profile = {
+        profile = { --
             first = true,
             themes = {
-                Default = {
-                    enable = true,
+                Default = ns.CreateThemeData{ --
                     locked = true,
-                    hideBlizModel = false,
-                    mmss = false,
-                    hideHaveCharges = false,
-                    minRatio = 0,
                     minDuration = 2.2,
-                    startRemain = 0,
-
-                    fontFace = LibMedia:GetDefault('font'),
-                    fontSize = 20,
-                    fontStyle = 'OUTLINE',
-                    point = 'CENTER',
-                    relativePoint = 'CENTER',
-                    xOffset = 0,
-                    yOffset = 0,
-
-                    styles = {
-                        SOON = {color = {r = 1, g = 0.1, b = 0.1}, scale = 1.2},
-                        SECOND = {color = {r = 1, g = 1, b = 1}, scale = 1},
-                        MINUTE = {color = {r = 0.8, g = 0.6, b = 0}, scale = 1},
-                        HOUR = {color = {r = 0.4, g = 0.4, b = 0.4}, scale = 1},
-                    },
-
-                    shine = true,
-                    shineMinDuration = 0,
-                    shineType = 'ICON',
-                    shineScale = 4,
-                    shineDuration = 0.6,
+                    shortLimit = 600,
                 },
             },
             rules = {},
@@ -98,68 +71,32 @@ function Addon:SetupDefault()
 
     self.db.profile.first = false
 
-    self.db.profile.themes.BigAura = {
-        enable = true,
-        hideBlizModel = false,
-        mmss = false,
-        hideHaveCharges = false,
-        minRatio = 0,
-        minDuration = 2.2,
-        startRemain = 0,
+    local BIG_AURA = L['Big aura']
+    local AURA = L['Aura']
 
-        fontFace = LibMedia:GetDefault('font'),
-        fontSize = 20,
-        fontStyle = 'OUTLINE',
-        point = 'CENTER',
-        relativePoint = 'CENTER',
-        xOffset = 0,
-        yOffset = 0,
-
-        styles = {
-            SOON = {color = {r = 1, g = 0.1, b = 0.1}, scale = 1.2},
-            SECOND = {color = {r = 1, g = 1, b = 1}, scale = 1},
-            MINUTE = {color = {r = 0.8, g = 0.6, b = 0}, scale = 1},
-            HOUR = {color = {r = 0.4, g = 0.4, b = 0.4}, scale = 1},
-        },
-
+    self.db.profile.themes[BIG_AURA] = ns.CreateThemeData{ --
         shine = false,
     }
-
-    self.db.profile.themes.Aura = {
-        enable = true,
-        hideBlizModel = true,
-        mmss = false,
-        hideHaveCharges = false,
-        minRatio = 0,
-        minDuration = 0,
-        startRemain = 0,
-
-        fontFace = LibMedia:GetDefault('font'),
-        fontSize = 20,
-        fontStyle = 'OUTLINE',
-        point = 'CENTER',
+    self.db.profile.themes[AURA] = ns.CreateThemeData{
+        fontSize = 22,
         relativePoint = 'TOPRIGHT',
-        xOffset = 0,
-        yOffset = 0,
-
+        shine = false,
         styles = {
             SOON = {color = {r = 1, g = 0.1, b = 0.1}, scale = 1},
             SECOND = {color = {r = 1, g = 1, b = 1}, scale = 1},
             MINUTE = {color = {r = 1, g = 1, b = 1}, scale = 1},
             HOUR = {color = {r = 1, g = 1, b = 1}, scale = 1},
         },
-
-        shine = false,
     }
 
-    self.db.profile.rules.BigAura = {
+    self.db.profile.rules[BIG_AURA] = {
         priority = 1,
-        theme = 'BigAura',
+        theme = BIG_AURA,
         rule = 'function(cooldown)\n    return cooldown:GetReverse() and cooldown:GetWidth() > 30\nend',
     }
-    self.db.profile.rules.Aura = {
+    self.db.profile.rules[AURA] = {
         priority = 2,
-        theme = 'Aura',
+        theme = AURA,
         rule = 'function(cooldown)\n    return cooldown:GetReverse()\nend',
     }
 end
@@ -189,10 +126,6 @@ function Addon:UpdateRules()
     ns.Timer:RefreshAll()
 end
 
-function Addon:GetFont(name)
-    return LibMedia:Fetch('font', name)
-end
-
 function Addon:SetCooldown(cooldown, start, duration, m)
     local show, keep = self:ShouldShow(cooldown, start, duration)
     if keep then
@@ -218,16 +151,16 @@ function Addon:ShouldShow(cooldown, start, duration)
     if not duration or duration == 0 then
         return
     end
-    local set = self:GetCooldownProfile(cooldown)
-    if not set or not set.enable then
+    local profile = self:GetCooldownProfile(cooldown)
+    if not profile or not profile.enable then
         return
     end
-    if duration < set.minDuration then
+    if duration < profile.minDuration then
         return
     end
-    if set.hideHaveCharges and cooldown:GetDrawEdge() then
-        return
-    end
+    -- if profile.hideHaveCharges and cooldown:GetDrawEdge() then
+    --     return
+    -- end
     local gcdStart, gcdDuration = GetSpellCooldown(29515) -- 29515/61304
     if gcdStart == start and gcdDuration == duration then
         local timer = ns.Timer:GetTimer(cooldown)

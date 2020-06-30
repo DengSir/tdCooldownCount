@@ -12,6 +12,17 @@ LibStub('AceTimer-3.0'):Embed(Timer)
 
 ns.Timer = Timer
 
+local SOON, SECOND, SHORT, MINUTE, HOUR, DAY = 10, 60, 600, 3600, 86400
+
+local STYLE_DB_KEYS = {
+    SOON = 'SOON',
+    SECOND = 'SECOND',
+    SHORT = 'MINUTE',
+    MINUTE = 'MINUTE',
+    HOUR = 'HOUR',
+    DAY = 'HOUR',
+}
+
 local TextHelper = {}
 local NextHelper = {}
 
@@ -129,24 +140,13 @@ function Timer:SetNextUpdate(nextUpdate)
     self:ScheduleTimer('Update', nextUpdate)
 end
 
-local SOON, SECOND, SHORT, MINUTE, HOUR, DAY = 10, 60, 600, 3600, 86400
-
-local STYLE_DB_KEYS = {
-    SOON = 'SOON',
-    SECOND = 'SECOND',
-    SHORT = 'MINUTE',
-    MINUTE = 'MINUTE',
-    HOUR = 'HOUR',
-    DAY = 'HOUR',
-}
-
-local function GetStyle(remain)
+function Timer:GetStyle()
+    local remain = self.remain
     if remain < SOON then
         return 'SOON'
     elseif remain < SECOND then
         return 'SECOND'
-    elseif remain < SHORT then
-        -- return self:GetMMSS() and 'SHORT' or 'MINUTE'
+    elseif remain < self.profile.shortLimit then
         return 'SHORT'
     elseif remain < MINUTE then
         return 'MINUTE'
@@ -154,6 +154,15 @@ local function GetStyle(remain)
         return 'HOUR'
     else
         return 'DAY'
+    end
+end
+
+function Timer:UpdateStyle()
+    local style = self:GetStyle()
+    if style ~= self.style then
+        self.style = style
+        self.styleProfile = self.profile.styles[STYLE_DB_KEYS[style]]
+        return true
     end
 end
 
@@ -181,17 +190,8 @@ function Timer:Update()
         return
     end
 
-    local style = GetStyle(remain)
-    local styleChanged = false
-    if style ~= self.style then
-        self.style = style
-        print(style)
-        self.styleProfile = self.profile.styles[STYLE_DB_KEYS[style]]
-        styleChanged = true
-    end
-
-    if styleChanged or not self.fontReady then
-        local fontFace = ns.Addon:GetFont(self.profile.fontFace)
+    if self:UpdateStyle() or not self.fontReady then
+        local fontFace = ns.GetFont(self.profile.fontFace)
         local fontStyle = self.profile.fontStyle
         local fontSize = self.profile.fontSize * self.ratio * self.styleProfile.scale
 
