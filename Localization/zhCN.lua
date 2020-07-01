@@ -31,6 +31,14 @@ L['Hour'] = '小时'
 L['Scale'] = '缩放'
 L['Color'] = '颜色'
 
+L['Shine'] = '闪光'
+L['Minimum cooldown duration to shining'] = '显示闪光的最短冷却时间'
+L['Shine style'] = '闪光样式'
+L['Icon'] = '图标'
+L['Blizzard'] = '暴雪'
+L['Explosive'] = '爆炸'
+L['Round'] = '图形'
+
 L['Rules'] = '规则'
 L['Add rule'] = '添加规则'
 

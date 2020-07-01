@@ -6,6 +6,9 @@
 ---@type ns
 local ns = select(2, ...)
 
+local GetTime = GetTime
+local GetSpellCooldown = GetSpellCooldown
+
 local Addon = ns.Addon
 
 local THEME_DEFAULT = ns.THEME_DEFAULT
@@ -18,12 +21,14 @@ end
 
 local function cooldownOnShow(cooldown)
     if cooldown._tdcc_start then
-        if cooldown._tdcc_start + cooldown._tdcc_duration > GetTime() then
-            setCooldown(cooldown, cooldown._tdcc_start, cooldown._tdcc_duration)
-        end
+        local start, duration = cooldown._tdcc_start, cooldown._tdcc_duration
 
         cooldown._tdcc_start = nil
         cooldown._tdcc_duration = nil
+
+        if start + duration > GetTime() then
+            setCooldown(cooldown, start, duration)
+        end
     end
 end
 
@@ -53,6 +58,9 @@ function Addon:SetCooldown(cooldown, start, duration, m)
     if show then
         self:HookCooldown(cooldown)
 
+        cooldown._tdcc_start = start
+        cooldown._tdcc_duration = duration
+
         return ns.Timer:StartTimer(cooldown, start, duration)
     else
         return ns.Timer:StopTimer(cooldown, start, duration)
@@ -60,10 +68,7 @@ function Addon:SetCooldown(cooldown, start, duration, m)
 end
 
 function Addon:ShouldShow(cooldown, start, duration)
-    if cooldown.noCooldownCount then
-        return
-    end
-    if cooldown:IsPaused() then
+    if cooldown.noCooldownCount or cooldown:IsPaused() then
         return
     end
     if not start or start == 0 then

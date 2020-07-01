@@ -40,9 +40,9 @@ local DEFAULT_THEME = {
 
     styles = {
         SOON = {color = {r = 1, g = 0.1, b = 0.1}, scale = 1.2},
-        SECOND = {color = {r = 0.1, g = 1, b = 1}, scale = 1},
-        MINUTE = {color = {r = 1, g = 0.82, b = 0}, scale = 1},
-        HOUR = {color = {r = 0.4, g = 0.4, b = 0.4}, scale = 1},
+        SECOND = {color = {r = 0, g = 1, b = 0.5}, scale = 1.1},
+        MINUTE = {color = {r = 1, g = 1, b = 0}, scale = 1},
+        HOUR = {color = {r = 0.4, g = 0.4, b = 0.4}, scale = 0.8},
     },
 
     shine = false,

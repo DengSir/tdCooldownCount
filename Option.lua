@@ -149,6 +149,10 @@ local RulesFixed = { --
 local ThemeOption = {
     type = 'group',
     childGroups = 'tab',
+    order = function(item)
+        local k = select(2, getOptionTheme(item))
+        return k == ns.THEME_DEFAULT and 1 or (1 + #k)
+    end,
     name = function(item)
         local theme, k = getOptionTheme(item)
         return theme.name or k
@@ -172,7 +176,7 @@ local ThemeOption = {
             func = function(item)
                 return Option:RemoveTheme(select(2, getOptionTheme(item)))
             end,
-            disabled = function(item)
+            hidden = function(item)
                 return getOptionTheme(item).locked
             end,
         },

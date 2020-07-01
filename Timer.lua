@@ -109,7 +109,7 @@ function Timer:Start(start, duration)
     self.profile = Addon:GetCooldownProfile(self.cooldown)
 
     if not self.ratio or self.ratio == 0 then
-        print('no ratio')
+
     elseif self.ratio < self.profile.minRatio then
         return
     else
@@ -121,8 +121,6 @@ function Timer:Start(start, duration)
 
         -- self:SetNextUpdate(start - GetTime())
     end
-
-    print(self, self.cooldown, start, duration)
 
     self.style = nil
     self.styleProfile = nil
@@ -141,8 +139,6 @@ function Timer:Stop()
         self.text:SetText('')
     end
     self.cooldown:SetAlpha(1)
-
-    print(self, self.cooldown, 'stop')
 
     self.cooldownTimers[self.cooldown] = nil
     self.pool[self] = true
