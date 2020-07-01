@@ -8,6 +8,19 @@ local ns = select(2, ...)
 
 local LSM = LibStub('LibSharedMedia-3.0')
 
+local ICONS = {
+    ROUND = [[Interface\Cooldown\ping4]],
+    BLIZZARD = [[Interface\Cooldown\star4]],
+    EXPLOSIVE = [[Interface\Cooldown\starburst]],
+}
+
+local SCALES = { --
+    ROUND = 4,
+    BLIZZARD = 5,
+    EXPLOSIVE = 4.5,
+    ICON = 4,
+}
+
 local DEFAULT_THEME = {
     enable = true,
     hideBlizModel = false,
@@ -15,6 +28,7 @@ local DEFAULT_THEME = {
     minDuration = 0,
     startRemain = 0,
     shortLimit = 0,
+    checkGCD = false,
 
     fontFace = LSM:GetDefault('font'),
     fontSize = 20,
@@ -32,11 +46,11 @@ local DEFAULT_THEME = {
     },
 
     shine = false,
-    shineType = 'ICON',
     shineMinDuration = 0,
-    shineScale = 4,
-    shineDuration = 0.6,
+    shineStyle = 'ICON',
 }
+
+ns.THEME_DEFAULT = DEFAULT
 
 function ns.orderGenerater()
     local order = 0
@@ -88,6 +102,34 @@ end
 
 function ns.GetFont(name)
     return LSM:Fetch('font', name)
+end
+
+function ns.GetIcon(cooldown, style)
+    local icon = ICONS[style]
+    if icon then
+        return icon, SCALES[style]
+    end
+
+    local iconObject = cooldown._tdcc_iconObject
+    if not iconObject then
+        local parent = cooldown:GetParent()
+
+        iconObject = parent.icon or parent.Icon
+
+        if not iconObject then
+            local name = parent:GetName()
+            if name then
+                iconObject = _G[name .. 'Icon'] or _G[name .. 'IconTexture']
+            end
+        end
+
+        if not iconObject then
+            return
+        end
+
+        cooldown._tdcc_iconObject = iconObject
+    end
+    return iconObject:GetTexture(), SCALES.ICON
 end
 
 function ns.CreateThemeData(profile)

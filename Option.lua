@@ -9,8 +9,9 @@ local ns = select(2, ...)
 local L = ns.L
 local AceConfigRegistry = LibStub('AceConfigRegistry-3.0')
 
+local Addon = ns.Addon
+
 local Option = {}
-ns.Option = Option
 
 local Rules = {}
 local Themes = {}
@@ -20,12 +21,12 @@ local orderGen = ns.orderGenerater()
 
 local function getOptionRule(item)
     local k = item[2]
-    return ns.Addon.db.profile.rules[k], k
+    return Addon.db.profile.rules[k], k
 end
 
 local function getOptionTheme(item)
     local k = item[2]
-    return ns.Addon.db.profile.themes[k], k
+    return Addon.db.profile.themes[k], k
 end
 
 local function toggle(name)
@@ -204,6 +205,7 @@ local ThemeOption = {
         style = {
             type = 'group',
             name = L['Color & Scale'],
+            order = orderGen(),
             get = function(item)
                 local db = getOptionTheme(item).styles[item[4]][item[#item]]
                 if item.type == 'color' then
@@ -228,6 +230,16 @@ local ThemeOption = {
                 MINUTE = style(L['Minute']),
                 HOUR = style(L['Hour']),
             },
+        },
+        shine = group(L['Shine']){ --
+            shine = fullToggle(ENABLE),
+            shineMinDuration = fullRange(L['Minimum cooldown duration to shining'], 0, 60),
+            shineStyle = drop(L['Shine style'], {
+                {name = L['Icon'], value = 'ICON'}, --
+                {name = L['Blizzard'], value = 'BLIZZARD'}, --
+                {name = L['Explosive'], value = 'EXPLOSIVE'}, --
+                {name = L['Round'], value = 'ROUND'}, --
+            }),
         },
     },
 }
@@ -297,7 +309,7 @@ local RuleOption = {
 }
 
 function Option:Load()
-    Options.args.profile = LibStub('AceDBOptions-3.0'):GetOptionsTable(ns.Addon.db)
+    Options.args.profile = LibStub('AceDBOptions-3.0'):GetOptionsTable(Addon.db)
 
     local registry = LibStub('AceConfigRegistry-3.0')
     registry:RegisterOptionsTable('tdCC', Options)
@@ -319,12 +331,12 @@ function Option:Update()
         Themes[k] = v
     end
 
-    for k, v in pairs(ns.Addon.db.profile.themes) do
+    for k, v in pairs(Addon.db.profile.themes) do
         Themes[k] = ThemeOption
         ThemesDropdown[k] = v.name or k
     end
 
-    for k, v in pairs(ns.Addon.db.profile.rules) do
+    for k, v in pairs(Addon.db.profile.rules) do
         Rules[k] = RuleOption
     end
 
@@ -347,7 +359,7 @@ function Option:SetRulePriority(rule, value)
 end
 
 function Option:UpdateRulesPriority()
-    local rules = ns.tvalues(ns.Addon.db.profile.rules)
+    local rules = ns.tvalues(Addon.db.profile.rules)
 
     sort(rules, function(a, b)
         return a.priority < b.priority
@@ -359,20 +371,20 @@ function Option:UpdateRulesPriority()
 end
 
 function Option:AddRule(name)
-    local rules = ns.Addon.db.profile.rules
+    local rules = Addon.db.profile.rules
     if rules[name] then
         return
     end
 
     local count = ns.tcount(rules)
-    rules[name] = {name = name, theme = 'Default', priority = count + 1}
+    rules[name] = {name = name, theme = ns.THEME_DEFAULT, priority = count + 1}
 
     self:Update()
     self:ApplyRules()
 end
 
 function Option:RemoveRule(name)
-    ns.Addon.db.profile.rules[name] = nil
+    Addon.db.profile.rules[name] = nil
 
     self:UpdateRulesPriority()
     self:Update()
@@ -380,7 +392,7 @@ function Option:RemoveRule(name)
 end
 
 function Option:AddTheme(name)
-    local themes = ns.Addon.db.profile.themes
+    local themes = Addon.db.profile.themes
     if themes[name] then
         return
     end
@@ -389,20 +401,24 @@ function Option:AddTheme(name)
 end
 
 function Option:RemoveTheme(name)
-    ns.Addon.db.profile.themes[name] = nil
+    Addon.db.profile.themes[name] = nil
     self:Update()
     self:ApplyThemes()
 end
 
 function Option:ApplyRules()
-    ns.Addon:UpdateRules()
+    Addon:UpdateRules()
 end
 
 function Option:ApplyThemes()
-    ns.Timer:RefreshAll()
+    Addon:RefreshAllTimers()
 end
 
-function ns.Addon:LoadOptionFrame()
+function Addon:LoadOptionFrame()
     Option:Load()
+    Option:Update()
+end
+
+function Addon:UpdateOptionFrame()
     Option:Update()
 end

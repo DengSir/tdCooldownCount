@@ -55,5 +55,5 @@ L['ARE YOU SURE TO DELETE THEME ?'] = '你确定要删除主题吗？'
 L['ARE YOU SURE TO DELETE RULE ?'] = '你确定要删除规则吗？'
 
 L['Aura'] = '光环'
-L['Big aura'] = '大型光环'
+L['Large aura'] = '大型光环'
 -- @end-import@

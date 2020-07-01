@@ -1,114 +1,116 @@
+-- Shine.lua
+-- @Author : Dencer (tdaddon@163.com)
+-- @Link   : https://dengsir.github.io
+-- @Date   : 7/1/2020, 1:47:45 PM
 
-local tdCC = LibStub('AceAddon-3.0'):GetAddon('tdCC')
-local Shine = tdCC:NewClass('Shine', 'Frame')
+---@type ns
+local ns = select(2, ...)
 
-tdCC.Shine = Shine
+local Shine = ns.Addon:NewClass('Shine', 'Frame')
+ns.Shine = Shine
 
-local shines = {}
+Shine.shines = {}
+Shine.pool = {}
 
 local function animOnFinished(self)
     local parent = self:GetParent()
     if parent:IsShown() then
-        parent:Hide()
+        parent:Stop()
     end
 end
 
-local function scaleOnFinished(self)
-    self:GetParent():Finish()
-end
-
-function Shine:Constructor(cooldown)
-	self:SetParent(cooldown:GetParent())
-    self:SetFrameStrata('HIGH')
-    self:SetFrameLevel(cooldown:GetParent():GetFrameLevel() + 5)
-	self:SetPoint('CENTER', cooldown, 'CENTER')
-    self:SetScript('OnHide', self.OnHide)
-
+function Shine:Constructor()
     local anim = self:CreateAnimationGroup()
-    anim:SetLooping('BOUNCE')
+    anim:SetLooping('NONE')
     anim:SetScript('OnFinished', animOnFinished)
 
-    local grow = anim:CreateAnimation('Scale')
-    grow:SetOrigin('CENTER', 0, 0)
-    grow:SetOrder(0)
-    grow:SetScript('OnFinished', scaleOnFinished)
+    local scale = anim:CreateAnimation('Scale')
+    scale:SetOrigin('CENTER', 0, 0)
+    scale:SetOrder(1)
+    scale:SetFromScale(4, 4)
+    scale:SetToScale(1, 1)
+    scale:SetDuration(0.6)
 
     local icon = self:CreateTexture(nil, 'OVERLAY')
     icon:SetBlendMode('ADD')
     icon:SetAllPoints(self)
 
-    self.grow = grow
     self.anim = anim
     self.icon = icon
-    self.cooldown = cooldown
+    self.scale = scale
 
-    shines[cooldown] = self
+    self:SetScript('OnHide', self.OnHide)
+end
+
+---- static
+
+function Shine:GetShine(cooldown)
+    return self.shines[cooldown]
+end
+
+function Shine:Acquire()
+    local shine = next(self.pool)
+    if not shine then
+        shine = self:New()
+    end
+    return shine
+end
+
+function Shine:StartShine(cooldown, shineStyle)
+    local icon, scale = ns.GetIcon(cooldown, shineStyle)
+    if not icon then
+        return
+    end
+
+    local shine = self:GetShine(cooldown)
+    if not shine then
+        shine = Shine:Acquire()
+        shine:SetupCooldown(cooldown)
+    end
+    shine:Start(icon, scale)
+end
+
+---- method
+
+function Shine:SetupCooldown(cooldown)
+    self:SetParent(cooldown:GetParent())
+    self:SetFrameStrata('HIGH')
+    self:SetFrameLevel(cooldown:GetParent():GetFrameLevel() + 5)
+    self:SetPoint('CENTER', cooldown, 'CENTER')
+
+    self.cooldown = cooldown
+    self.shines[cooldown] = self
 end
 
 function Shine:OnHide()
     if self.anim:IsPlaying() then
         self.anim:Stop()
     end
-    self:Hide()
+    self:Stop()
 end
 
----- global
-
-function Shine:GetShine(cooldown)
-    return shines[cooldown]
-end
-
-function Shine:StartShine(cooldown, set)
-    local shine = self:GetShine(cooldown) or self:New(cooldown)
-
-    shine.set = set
-    shine:Start()
-end
-
-function Shine:Start()
+function Shine:Start(icon, scale)
     if self.anim:IsPlaying() then
         self.anim:Stop()
     end
 
-    self.icon:SetTexture(self:GetIcon())
-
-    local width, height = self.cooldown:GetSize()
-    local scale = self.set:GetShineScale()
-    self:SetSize(width * scale, height * scale)
-
-    self.grow:SetScale(1 / scale, 1 / scale)
-    self.grow:SetDuration(self.set:GetShineDuration())
-
+    self.icon:SetTexture(icon)
+    self.scale:SetFromScale(scale, scale)
+    self:SetSize(self.cooldown:GetSize())
     self:Show()
     self.anim:Play()
+
+    self.shines[self.cooldown] = true
 end
 
-local ICONS = {
-    ROUND     = [[Interface\Cooldown\ping4]],
-    BLIZZARD  = [[Interface\Cooldown\star4]],
-    EXPLOSIVE = [[Interface\Cooldown\starburst]],
-}
-
-function Shine:GetIcon()
-    local icon = ICONS[self.set:GetShineType()]
-    if icon then
-        return icon
+function Shine:Stop()
+    if not self.cooldown then
+        return
     end
 
-    local frame = self:GetParent()
-    if frame then
-        local iconObject = self.iconObject
-        if iconObject then
-            return iconObject:GetTexture()
-        end
+    self.shines[self.cooldown] = nil
+    self.pool[self] = true
 
-        local name = frame:GetName()
-        if name then
-            local iconObject = _G[name .. 'Icon'] or _G[name .. 'IconTexture']
-            if iconObject then
-                self.iconObject = iconObject
-                return iconObject:GetTexture()
-            end
-        end
-    end
+    self.cooldown = nil
+    self:Hide()
 end

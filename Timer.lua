@@ -6,8 +6,10 @@
 ---@type ns
 local ns = select(2, ...)
 
----@type Timer
-local Timer = ns.Addon:NewClass('Timer', 'Frame')
+local Addon = ns.Addon
+
+---@type tdCCTimer
+local Timer = Addon:NewClass('Timer', 'Frame')
 LibStub('AceTimer-3.0'):Embed(Timer)
 
 ns.Timer = Timer
@@ -26,7 +28,8 @@ local STYLE_DB_KEYS = {
 local TextHelper = {}
 local NextHelper = {}
 
-local timers = {}
+Timer.cooldownTimers = {}
+Timer.pool = {}
 
 local function cooldownOnHide(cooldown)
     return Timer:StopTimer(cooldown)
@@ -36,26 +39,33 @@ local function cooldownOnSizeChanged(cooldown)
     return Timer:GetTimer(cooldown):RefreshConfig()
 end
 
-function Timer:Constructor(cooldown)
-    self:SetParent(cooldown:GetParent())
-    self:SetFrameLevel(cooldown:GetFrameLevel() + 5)
-    self:SetPoint('CENTER')
-
+function Timer:Constructor()
     self.text = self:CreateFontString(nil, 'OVERLAY')
     self.text:SetFont(STANDARD_TEXT_FONT, 14)
+    -- cooldown:HookScript('OnSizeChanged', cooldownOnSizeChanged)
+    -- cooldown:HookScript('OnHide', cooldownOnHide)
 
-    self.cooldown = cooldown
+    self:SetScript('OnSizeChanged', self.UpdateSize)
+end
 
-    self:UpdateSize(cooldown:GetSize())
+---- static
 
-    timers[cooldown] = self
-
-    cooldown:HookScript('OnSizeChanged', cooldownOnSizeChanged)
-    cooldown:HookScript('OnHide', cooldownOnHide)
+function Timer:Acquire()
+    local timer = next(self.pool)
+    if not timer then
+        timer = self:New()
+    else
+        self.pool[timer] = nil
+    end
+    return timer
 end
 
 function Timer:StartTimer(cooldown, start, duration)
-    local timer = self:GetTimer(cooldown) or self:New(cooldown)
+    local timer = self:GetTimer(cooldown)
+    if not timer then
+        timer = self:Acquire()
+        timer:SetupCooldown(cooldown)
+    end
     timer:Start(start, duration)
 end
 
@@ -67,30 +77,39 @@ function Timer:StopTimer(cooldown)
 end
 
 function Timer:GetTimer(cooldown)
-    return timers[cooldown]
+    return self.cooldownTimers[cooldown]
 end
 
 function Timer:RefreshAll()
-    for cooldown, timer in pairs(timers) do
+    for cooldown, timer in pairs(self.cooldownTimers) do
         timer:RefreshConfig()
-    end
-end
-
-function Timer:RefreshConfig()
-    self:UpdateSize(self.cooldown:GetSize())
-
-    if self.start then
-        self:Start(self.start, self.duration)
     end
 end
 
 ---- method
 
+function Timer:SetupCooldown(cooldown)
+    self:ClearAllPoints()
+    self:SetParent(cooldown:GetParent())
+    self:SetAllPoints(cooldown)
+    self:SetFrameLevel(cooldown:GetFrameLevel() + 5)
+    self:UpdateSize(cooldown:GetSize())
+
+    self.cooldown = cooldown
+    self.cooldownTimers[cooldown] = self
+end
+
+function Timer:RefreshConfig()
+    if self.start then
+        Addon:SetCooldown(self.cooldown, self.start, self.duration)
+    end
+end
+
 function Timer:Start(start, duration)
-    self.profile = ns.Addon:GetCooldownProfile(self.cooldown)
+    self.profile = Addon:GetCooldownProfile(self.cooldown)
 
     if not self.ratio or self.ratio == 0 then
-
+        print('no ratio')
     elseif self.ratio < self.profile.minRatio then
         return
     else
@@ -100,8 +119,10 @@ function Timer:Start(start, duration)
         self.text:SetPoint(self.profile.point, self, self.profile.relativePoint, self.profile.xOffset,
                            self.profile.yOffset)
 
-        self:SetNextUpdate(start - GetTime())
+        -- self:SetNextUpdate(start - GetTime())
     end
+
+    print(self, self.cooldown, start, duration)
 
     self.style = nil
     self.styleProfile = nil
@@ -110,6 +131,7 @@ function Timer:Start(start, duration)
     self.duration = duration
 
     self:Show()
+    self:Update()
 end
 
 function Timer:Stop()
@@ -118,12 +140,17 @@ function Timer:Stop()
     if self.fontReady then
         self.text:SetText('')
     end
+    self.cooldown:SetAlpha(1)
+
+    print(self, self.cooldown, 'stop')
+
+    self.cooldownTimers[self.cooldown] = nil
+    self.pool[self] = true
 
     self.start = nil
     self.duration = nil
     self.fontReady = nil
-
-    self.cooldown:SetAlpha(1)
+    self.cooldown = nil
 
     self:Hide()
 end
@@ -185,7 +212,7 @@ function Timer:Update()
     end
 
     if remain < 0.2 then
-        -- self:Shine()
+        self:Shine()
         self:Stop()
         return
     end
@@ -217,17 +244,17 @@ end
 function Timer:UpdateSize(width, height)
     self.width = width
     self.ratio = floor(width + 0.5) / 36
-    self:SetSize(width, height)
 end
 
 function Timer:Shine()
-    if not self.set:IsShineEnabled() then
+    if not self.profile.shine then
         return
     end
-    if self.set:GetShineMinDuration() >= self.duration then
+    if self.duration <= self.profile.shineMinDuration then
         return
     end
-    ns.Addon.Shine:StartShine(self.cooldown, self.set)
+
+    ns.Shine:StartShine(self.cooldown, self.profile.shineStyle)
 end
 
 ---- TextHelper
@@ -272,4 +299,8 @@ end
 
 function NextHelper.DAY(remain)
     return remain % HOUR
+end
+
+function Addon:RefreshAllTimers()
+    return Timer:RefreshAll()
 end

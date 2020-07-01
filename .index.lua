@@ -3,26 +3,33 @@
 -- @Link   : https://dengsir.github.io
 -- @Date   : 6/29/2020, 3:15:49 PM
 
----@class Timer
+---@class Addon
+---@field rules tdCCRule[]
+---@field db tdCCDB
+
+---@class tdCCTimer
 ---@field text FontString
 ---@field remain number
----@field profile Theme
+---@field profile tdCCThemeProfile
 ---@field style string
----@field styleProfile RemainStyle
+---@field styleProfile tdCCStyleProfile
 ---@field ratio number
 ---@field fontReady boolean
+---
+---@field cooldownTimers table<Cooldown, tdCCTimer>
+---@field pool table<tdCCTimer, true>
 
----@class Color
+---@class tdCCColor
 ---@field r number
 ---@field g number
 ---@field b number
 ---@field a number
 
----@class RemainStyle
----@field color Color
+---@class tdCCStyleProfile
+---@field color tdCCColor
 ---@field scale number
 
----@class Theme
+---@class tdCCThemeProfile
 ---@field enable boolean
 ---@field hideBlizModel boolean
 ---@field minRatio number
@@ -35,11 +42,21 @@
 ---@field relativePoint string
 ---@field xOffset number
 ---@field yOffset number
----@field styles table<string, RemainStyle>
+---@field styles table<string, tdCCStyleProfile>
 ---@field shine boolean
+---@field shineMinDuration number
+---@field shineStyle string
+---@field checkGCD boolean
 
----@class Rule
+---@class tdCCRule
 ---@field name string
 ---@field theme string
 ---@field priority number
 ---@field rule fun(cooldown:Cooldown): boolean
+---@field enable boolean
+
+---@class tdCCDB
+---@field profile tdCCProfile
+
+---@class tdCCProfile
+---@field themes table<string, tdCCThemeProfile>
