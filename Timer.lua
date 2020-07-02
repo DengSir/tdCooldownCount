@@ -190,6 +190,10 @@ function Timer:UpdateStyle()
 end
 
 function Timer:Update()
+    if not self.ratio then
+        return self:SetNextUpdate(0)
+    end
+
     local now = GetTime()
     local remain = self.start + self.duration - now
     local startRemain = self.profile.startRemain
@@ -233,13 +237,14 @@ function Timer:Update()
 
         self:SetNextUpdate(NextHelper[self.style](remain))
     else
-        self:SetNextUpdate(0.1)
+        self:SetNextUpdate(0)
     end
 end
 
 function Timer:UpdateSize(width, height)
-    self.width = width
-    self.ratio = floor(width + 0.5) / 36
+    if width > 0 then
+        self.ratio = floor(width + 0.5) / 36
+    end
 end
 
 function Timer:Shine()
