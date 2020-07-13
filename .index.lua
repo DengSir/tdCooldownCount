@@ -46,7 +46,6 @@
 ---@field shine boolean
 ---@field shineMinDuration number
 ---@field shineStyle string
----@field shineDuration number
 ---@field checkGCD boolean
 ---@field shortThreshold number
 ---@field expireThreshold number

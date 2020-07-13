@@ -52,7 +52,6 @@ local DEFAULT_THEME = {
     },
 
     shine = false,
-    shineDuration = 1,
     shineMinDuration = 0,
     shineStyle = 'ICON',
 }

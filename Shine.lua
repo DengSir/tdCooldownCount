@@ -6,7 +6,6 @@
 local ns = select(2, ...)
 
 local DURATION = 0.8
-local SCALE = 4
 
 local Shine = ns.Addon:NewClass('Shine', 'Frame')
 ns.Shine = Shine
@@ -32,12 +31,15 @@ function Shine:Constructor()
 
     local scale = anim:CreateAnimation('Scale')
     scale:SetOrigin('CENTER', 0, 0)
-    scale:SetOrder(1)
+    scale:SetDuration(DURATION)
     scale:SetToScale(1, 1)
+    scale:SetOrder(1)
     scale:SetTarget(icon)
 
     local rotation = anim:CreateAnimation('Rotation')
     rotation:SetDegrees(360)
+    rotation:SetDuration(DURATION * 3 / 5)
+    rotation:SetStartDelay(DURATION * 2 / 5)
     rotation:SetOrder(1)
     rotation:SetTarget(icon)
 
@@ -103,9 +105,6 @@ function Shine:Start()
 
     self.icon:SetTexture(icon)
     self.scale:SetFromScale(scale, scale)
-    self.scale:SetDuration(self.profile.shineDuration)
-    self.rotation:SetDuration(self.profile.shineDuration / 2)
-    self.rotation:SetStartDelay(self.profile.shineDuration / 2)
     self:SetSize(self.cooldown:GetSize())
     self:Show()
     self.anim:Play()
