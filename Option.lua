@@ -184,7 +184,8 @@ local ThemeOption = {
             hideBlizModel = fullToggle(L['Hide blizzard cooldown model']),
             minDuration = fullRange(L['Minimum cooldown duration to counting'], 0, 10, 0.1),
             startRemain = fullRange(L['Start counting after remaining cooldown time'], 0, 3600, 1),
-            shortThreshold = fullRange(L['Start with MM:SS counting after remaing cooldown time'], 0, 600, 1),
+            shortThreshold = fullRange(L['Start counting with MM:SS after remaining cooldown time'], 0, 600, 1),
+            expireThreshold = fullRange(L['Start counting in milliseconds after remaining cooldown time'], 0, 60, 1),
         },
         font = group(L['Font & Position']) {
             fontFace = {

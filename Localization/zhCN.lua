@@ -1,4 +1,3 @@
-
 local L = LibStub('AceLocale-3.0'):NewLocale('tdCC', 'zhCN')
 if not L then
     return
@@ -11,7 +10,8 @@ L['Add theme'] = '添加主题'
 L['Hide blizzard cooldown model'] = '隐藏暴雪冷却模型'
 L['Minimum cooldown duration to counting'] = '显示计数的最短冷却时间'
 L['Start counting after remaining cooldown time'] = '在剩余冷却时间后开始计数'
-L['Start with MM:SS counting after remaing cooldown time'] = '在剩余冷却时间后以MM:SS计数'
+L['Start counting with MM:SS after remaining cooldown time'] = '在剩余冷却时间后以MM:SS计数'
+L['Start counting in milliseconds after remaining cooldown time'] = '在剩余的冷却时间后以毫秒计数'
 
 L['Font & Position'] = '字体和位置'
 L['Font face'] = '字体'

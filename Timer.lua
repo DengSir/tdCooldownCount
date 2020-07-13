@@ -6,15 +6,19 @@
 local ns = select(2, ...)
 
 local next, pairs = next, pairs
-local floor = math.floor
+local format = string.format
+local floor, ceil = math.floor, math.ceil
 
 local GetTime = GetTime
 
-local Addon = ns.Addon
-local TextHelper = ns.TextHelper
-local NextHelper = ns.NextHelper
-
 local STANDARD_TEXT_FONT = STANDARD_TEXT_FONT
+
+local Addon = ns.Addon
+
+local SOON, SECOND, MINUTE, HOUR, DAY = 10, 60, 3600, 86400
+
+local TextHelper = {}
+local NextHelper = {}
 
 ---@type tdCCTimer
 local Timer = Addon:NewClass('Timer', 'Frame')
@@ -138,8 +142,22 @@ function Timer:SetNextUpdate(nextUpdate)
     self:ScheduleTimer('Update', nextUpdate)
 end
 
-function Timer:UpdateStyle()
-    return ns.TimerHelper:Update(self)
+function Timer:CheckStyle(remain)
+    if remain < self.profile.expireThreshold then
+        return remain < SOON and 'SOON' or 'SECOND', 'EXPIRE'
+    elseif remain < SOON then
+        return 'SOON', 'SOON'
+    elseif remain < SECOND then
+        return 'SECOND', 'SECOND'
+    elseif remain < self.profile.shortThreshold then
+        return 'MINUTE', 'SHORT'
+    elseif remain < MINUTE then
+        return 'MINUTE', 'MINUTE'
+    elseif remain < HOUR then
+        return 'HOUR', 'HOUR'
+    else
+        return 'HOUR', 'DAY'
+    end
 end
 
 function Timer:Update()
@@ -150,8 +168,6 @@ function Timer:Update()
     local now = GetTime()
     local remain = self.start + self.duration - now
     local startRemain = self.profile.startRemain
-
-    self.remain = remain
 
     if self.start > now then
         self:SetNextUpdate(self.start - now)
@@ -170,7 +186,15 @@ function Timer:Update()
         return
     end
 
-    if self:UpdateStyle() or not self.fontReady then
+    local style, style2 = self:CheckStyle(remain)
+    local styleChanged = style ~= self.style
+
+    if styleChanged then
+        self.style = style
+        self.styleProfile = self.profile.styles[style]
+    end
+
+    if styleChanged or not self.fontReady then
         local fontFace = ns.GetFont(self.profile.fontFace)
         local fontStyle = self.profile.fontStyle
         local fontSize = self.profile.fontSize * self.ratio * self.styleProfile.scale
@@ -185,10 +209,10 @@ function Timer:Update()
     if self.fontReady then
         local color = self.styleProfile.color
         self.text:SetTextColor(color.r, color.g, color.b, color.a)
-        self.text:SetText(TextHelper(self))
+        self.text:SetText(TextHelper[style2](remain))
         self.text:Show()
 
-        self:SetNextUpdate(NextHelper(self))
+        self:SetNextUpdate(NextHelper[style2](remain))
     else
         self:SetNextUpdate(0)
     end
@@ -214,3 +238,57 @@ function Timer:Shine()
 
     ns.Shine:StartShine(self.cooldown, self.profile.shineStyle)
 end
+
+---- TextHelper
+
+function TextHelper.EXPIRE(remain)
+    return format('%0.1f', remain)
+end
+
+function TextHelper.SECOND(remain)
+    return format('%d', ceil(remain))
+end
+
+function TextHelper.SHORT(remain)
+    remain = ceil(remain)
+    return format('%d:%02d', floor(remain / SECOND), ceil(remain % SECOND))
+end
+
+function TextHelper.MINUTE(remain)
+    return format('%dm', ceil(remain / SECOND))
+end
+
+function TextHelper.HOUR(remain)
+    return format('%dh', ceil(remain / MINUTE))
+end
+
+function TextHelper.DAY(remain)
+    return format('%dd', ceil(remain / HOUR))
+end
+
+TextHelper.SOON = TextHelper.SECOND
+
+---- NextHelper
+
+function NextHelper.EXPIRE(remain)
+    return NextHelper.SECOND(remain * 10) / 10
+end
+
+function NextHelper.SECOND(remain)
+    return remain - floor(remain)
+end
+
+function NextHelper.MINUTE(remain)
+    return remain % SECOND
+end
+
+function NextHelper.HOUR(remain)
+    return remain % MINUTE
+end
+
+function NextHelper.DAY(remain)
+    return remain % HOUR
+end
+
+NextHelper.SOON = NextHelper.SECOND
+NextHelper.SHORT = NextHelper.SECOND
