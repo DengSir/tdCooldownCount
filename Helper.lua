@@ -71,7 +71,6 @@ end
 ---@param timer tdCCTimer
 local function checkText(timer)
     local remain = timer.remain
-    print(remain, timer.profile.expireThreshold)
     if remain < timer.profile.expireThreshold then
         return TextHelper.EXPIRE
     elseif remain < SECOND then

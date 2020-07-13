@@ -2,7 +2,6 @@
 -- @Author : Dencer (tdaddon@163.com)
 -- @Link   : https://dengsir.github.io
 -- @Date   : 7/1/2020, 3:50:26 PM
-
 ---@type ns
 local ns = select(2, ...)
 
@@ -106,4 +105,10 @@ end
 function Addon:GetCooldownProfile(cooldown)
     local theme = self:GetCooldownTheme(cooldown)
     return theme and self.db.profile.themes[theme] or self.db.profile.themes[THEME_DEFAULT]
+end
+
+function Addon:RefreshAllTimers()
+    for cooldown, timer in ns.Timer:IterateTimers() do
+        self:SetCooldown(cooldown, timer.start, timer.duration)
+    end
 end

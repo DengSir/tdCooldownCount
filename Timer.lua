@@ -63,10 +63,8 @@ function Timer:GetTimer(cooldown)
     return self.cooldownTimers[cooldown]
 end
 
-function Timer:RefreshAll()
-    for cooldown, timer in pairs(self.cooldownTimers) do
-        timer:RefreshConfig()
-    end
+function Timer:IterateTimers()
+    return pairs(self.cooldownTimers)
 end
 
 ---- method
@@ -80,12 +78,6 @@ function Timer:SetupCooldown(cooldown)
 
     self.cooldown = cooldown
     self.cooldownTimers[cooldown] = self
-end
-
-function Timer:RefreshConfig()
-    if self.start then
-        Addon:SetCooldown(self.cooldown, self.start, self.duration)
-    end
 end
 
 function Timer:Start(start, duration)
@@ -221,8 +213,4 @@ function Timer:Shine()
     end
 
     ns.Shine:StartShine(self.cooldown, self.profile.shineStyle)
-end
-
-function Addon:RefreshAllTimers()
-    return Timer:RefreshAll()
 end
