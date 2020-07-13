@@ -52,6 +52,8 @@ function Shine:Acquire()
     local shine = next(self.pool)
     if not shine then
         shine = self:New()
+    else
+        self.pool[shine] = nil
     end
     return shine
 end
@@ -99,8 +101,6 @@ function Shine:Start(icon, scale)
     self:SetSize(self.cooldown:GetSize())
     self:Show()
     self.anim:Play()
-
-    self.shines[self.cooldown] = true
 end
 
 function Shine:Stop()

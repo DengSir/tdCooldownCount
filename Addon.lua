@@ -2,7 +2,6 @@
 -- @Author : Dencer (tdaddon@163.com)
 -- @Link   : https://dengsir.github.io
 -- @Date   : 6/29/2020, 12:35:06 PM
-
 ---@type ns
 local ns = select(2, ...)
 
@@ -18,9 +17,9 @@ function Addon:OnInitialize()
         profile = { --
             first = true,
             themes = {
-                [ns.THEME_DEFAULT] = ns.CreateThemeData{ --
+                [ns.THEME_DEFAULT] = ns.CreateThemeData {
                     locked = true,
-                    shortLimit = 600,
+                    shortThreshold = 600,
                     checkGCD = true,
                     shine = true,
                 },
@@ -33,18 +32,26 @@ function Addon:OnInitialize()
 
     self.db:RegisterCallback('OnProfileReset', function()
         self:SetupDefault()
+        self:FixThemes()
         self:UpdateRules()
         self:UpdateOptionFrame()
         self:RefreshAllTimers()
     end)
 
     self:SetupDefault()
+    self:FixThemes()
     self:LoadOptionFrame()
 end
 
 function Addon:OnEnable()
     self:UpdateRules()
     self:SetupHooks()
+end
+
+function Addon:FixThemes()
+    for k, v in pairs(self.db.profile.themes) do
+        self.db.profile.themes[k] = ns.CreateThemeData(v)
+    end
 end
 
 function Addon:SetupDefault()
@@ -59,10 +66,10 @@ function Addon:SetupDefault()
     local RULE_LARGE_AURA = L['Large aura']
     local RULE_SMALL_AURA = L['Aura']
 
-    self.db.profile.themes[THEME_LARGE_AURA] = ns.CreateThemeData{ --
+    self.db.profile.themes[THEME_LARGE_AURA] = ns.CreateThemeData { --
         shine = false,
     }
-    self.db.profile.themes[THEME_SMALL_AURA] = ns.CreateThemeData{
+    self.db.profile.themes[THEME_SMALL_AURA] = ns.CreateThemeData {
         fontSize = 22,
         relativePoint = 'TOPRIGHT',
         shine = false,

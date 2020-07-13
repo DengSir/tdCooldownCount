@@ -47,6 +47,8 @@
 ---@field shineMinDuration number
 ---@field shineStyle string
 ---@field checkGCD boolean
+---@field shortThreshold number
+---@field expireThreshold number
 
 ---@class tdCCRule
 ---@field name string

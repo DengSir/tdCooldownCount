@@ -2,7 +2,7 @@
 -- @Author : Dencer (tdaddon@163.com)
 -- @Link   : https://dengsir.github.io
 -- @Date   : 6/29/2020, 1:48:54 PM
-
+--
 ---@type ns
 local ns = select(2, ...)
 
@@ -101,7 +101,7 @@ local function rgba(name)
 end
 
 local function style(name)
-    return inline(name){scale = range(L['Scale'], 0.5, 3, 0.1), color = rgba(L['Color'])}
+    return inline(name) {scale = range(L['Scale'], 0.5, 3, 0.1), color = rgba(L['Color'])}
 end
 
 local function header(name)
@@ -180,13 +180,13 @@ local ThemeOption = {
                 return getOptionTheme(item).locked
             end,
         },
-        general = group(GENERAL){ --
+        general = group(GENERAL) { --
             hideBlizModel = fullToggle(L['Hide blizzard cooldown model']),
             minDuration = fullRange(L['Minimum cooldown duration to counting'], 0, 10, 0.1),
             startRemain = fullRange(L['Start counting after remaining cooldown time'], 0, 3600, 1),
-            shortLimit = fullRange(L['Start with MM:SS counting after remaing cooldown time'], 0, 600, 1),
+            shortThreshold = fullRange(L['Start with MM:SS counting after remaing cooldown time'], 0, 600, 1),
         },
-        font = group(L['Font & Position']){
+        font = group(L['Font & Position']) {
             fontFace = {
                 type = 'select',
                 name = L['Font face'],
@@ -235,7 +235,7 @@ local ThemeOption = {
                 HOUR = style(L['Hour']),
             },
         },
-        shine = group(L['Shine']){ --
+        shine = group(L['Shine']) { --
             shine = fullToggle(ENABLE),
             shineMinDuration = fullRange(L['Minimum cooldown duration to shining'], 0, 60),
             shineStyle = drop(L['Shine style'], {

@@ -2,9 +2,14 @@
 -- @Author : Dencer (tdaddon@163.com)
 -- @Link   : https://dengsir.github.io
 -- @Date   : 6/30/2020, 12:21:34 AM
-
+--
 ---@type ns
 local ns = select(2, ...)
+
+local _G = _G
+local type = type
+local pairs = pairs
+local tinsert = table.insert
 
 local LSM = LibStub('LibSharedMedia-3.0')
 
@@ -27,7 +32,8 @@ local DEFAULT_THEME = {
     minRatio = 0,
     minDuration = 0,
     startRemain = 0,
-    shortLimit = 0,
+    shortThreshold = 0,
+    expireThreshold = 0,
     checkGCD = false,
 
     fontFace = LSM:GetDefault('font'),

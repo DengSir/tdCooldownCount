@@ -2,11 +2,19 @@
 -- @Author : Dencer (tdaddon@163.com)
 -- @Link   : https://dengsir.github.io
 -- @Date   : 6/29/2020, 12:37:45 PM
-
 ---@type ns
 local ns = select(2, ...)
 
+local next, pairs = next, pairs
+local floor = math.floor
+
+local GetTime = GetTime
+
 local Addon = ns.Addon
+local TextHelper = ns.TextHelper
+local NextHelper = ns.NextHelper
+
+local STANDARD_TEXT_FONT = STANDARD_TEXT_FONT
 
 ---@type tdCCTimer
 local Timer = Addon:NewClass('Timer', 'Frame')
@@ -14,37 +22,12 @@ LibStub('AceTimer-3.0'):Embed(Timer)
 
 ns.Timer = Timer
 
-local SOON, SECOND, SHORT, MINUTE, HOUR, DAY = 10, 60, 600, 3600, 86400
-
-local STYLE_DB_KEYS = {
-    SOON = 'SOON',
-    SECOND = 'SECOND',
-    SHORT = 'MINUTE',
-    MINUTE = 'MINUTE',
-    HOUR = 'HOUR',
-    DAY = 'HOUR',
-}
-
-local TextHelper = {}
-local NextHelper = {}
-
 Timer.cooldownTimers = {}
 Timer.pool = {}
-
-local function cooldownOnHide(cooldown)
-    return Timer:StopTimer(cooldown)
-end
-
-local function cooldownOnSizeChanged(cooldown)
-    return Timer:GetTimer(cooldown):RefreshConfig()
-end
 
 function Timer:Constructor()
     self.text = self:CreateFontString(nil, 'OVERLAY')
     self.text:SetFont(STANDARD_TEXT_FONT, 14)
-    -- cooldown:HookScript('OnSizeChanged', cooldownOnSizeChanged)
-    -- cooldown:HookScript('OnHide', cooldownOnHide)
-
     self:SetScript('OnSizeChanged', self.UpdateSize)
 end
 
@@ -163,30 +146,8 @@ function Timer:SetNextUpdate(nextUpdate)
     self:ScheduleTimer('Update', nextUpdate)
 end
 
-function Timer:GetStyle()
-    local remain = self.remain
-    if remain < SOON then
-        return 'SOON'
-    elseif remain < SECOND then
-        return 'SECOND'
-    elseif remain < self.profile.shortLimit then
-        return 'SHORT'
-    elseif remain < MINUTE then
-        return 'MINUTE'
-    elseif remain < HOUR then
-        return 'HOUR'
-    else
-        return 'DAY'
-    end
-end
-
 function Timer:UpdateStyle()
-    local style = self:GetStyle()
-    if style ~= self.style then
-        self.style = style
-        self.styleProfile = self.profile.styles[STYLE_DB_KEYS[style]]
-        return true
-    end
+    return ns.TimerHelper:Update(self)
 end
 
 function Timer:Update()
@@ -232,10 +193,10 @@ function Timer:Update()
     if self.fontReady then
         local color = self.styleProfile.color
         self.text:SetTextColor(color.r, color.g, color.b, color.a)
-        self.text:SetText(TextHelper[self.style](remain))
+        self.text:SetText(TextHelper(self))
         self.text:Show()
 
-        self:SetNextUpdate(NextHelper[self.style](remain))
+        self:SetNextUpdate(NextHelper(self))
     else
         self:SetNextUpdate(0)
     end
@@ -243,7 +204,11 @@ end
 
 function Timer:UpdateSize(width, height)
     if width > 0 then
-        self.ratio = floor(width + 0.5) / 36
+        local ratio = floor(width + 0.5) / 36
+        if not self.ratio or self.ratio ~= ratio then
+            self.ratio = ratio
+            self.fontReady = nil
+        end
     end
 end
 
@@ -256,50 +221,6 @@ function Timer:Shine()
     end
 
     ns.Shine:StartShine(self.cooldown, self.profile.shineStyle)
-end
-
----- TextHelper
-
-function TextHelper.SOON(remain)
-    return ('%d'):format(ceil(remain))
-end
-TextHelper.SECOND = TextHelper.SOON
-
-function TextHelper.SHORT(remain)
-    remain = ceil(remain)
-    return ('%d:%02d'):format(floor(remain / SECOND), ceil(remain % SECOND))
-end
-
-function TextHelper.MINUTE(remain)
-    return ('%dm'):format(ceil(remain / SECOND))
-end
-
-function TextHelper.HOUR(remain)
-    return ('%dh'):format(ceil(remain / MINUTE))
-end
-
-function TextHelper.DAY(remain)
-    return ('%dd'):format(ceil(remain / HOUR))
-end
-
----- NextHelper
-
-function NextHelper.SOON(remain)
-    return remain - floor(remain)
-end
-NextHelper.SECOND = NextHelper.SOON
-NextHelper.SHORT = NextHelper.SOON
-
-function NextHelper.MINUTE(remain)
-    return remain % SECOND
-end
-
-function NextHelper.HOUR(remain)
-    return remain % MINUTE
-end
-
-function NextHelper.DAY(remain)
-    return remain % HOUR
 end
 
 function Addon:RefreshAllTimers()
