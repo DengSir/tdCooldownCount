@@ -238,6 +238,7 @@ local ThemeOption = {
         },
         shine = group(L['Shine']) { --
             shine = fullToggle(ENABLE),
+            shineDuration = fullRange(L['Shining duration'], 0.1, 5, 0.1),
             shineMinDuration = fullRange(L['Minimum cooldown duration to shining'], 0, 60),
             shineStyle = drop(L['Shine style'], {
                 {name = L['Icon'], value = 'ICON'}, --

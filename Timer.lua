@@ -236,7 +236,7 @@ function Timer:Shine()
         return
     end
 
-    ns.Shine:StartShine(self.cooldown, self.profile.shineStyle)
+    ns.Shine:StartShine(self.cooldown, self.profile)
 end
 
 ---- TextHelper

@@ -2,9 +2,11 @@
 -- @Author : Dencer (tdaddon@163.com)
 -- @Link   : https://dengsir.github.io
 -- @Date   : 7/1/2020, 1:47:45 PM
-
 ---@type ns
 local ns = select(2, ...)
+
+local DURATION = 0.8
+local SCALE = 4
 
 local Shine = ns.Addon:NewClass('Shine', 'Frame')
 ns.Shine = Shine
@@ -20,6 +22,10 @@ local function animOnFinished(self)
 end
 
 function Shine:Constructor()
+    local icon = self:CreateTexture(nil, 'OVERLAY')
+    icon:SetBlendMode('ADD')
+    icon:SetAllPoints(self)
+
     local anim = self:CreateAnimationGroup()
     anim:SetLooping('NONE')
     anim:SetScript('OnFinished', animOnFinished)
@@ -27,17 +33,18 @@ function Shine:Constructor()
     local scale = anim:CreateAnimation('Scale')
     scale:SetOrigin('CENTER', 0, 0)
     scale:SetOrder(1)
-    scale:SetFromScale(4, 4)
     scale:SetToScale(1, 1)
-    scale:SetDuration(0.6)
+    scale:SetTarget(icon)
 
-    local icon = self:CreateTexture(nil, 'OVERLAY')
-    icon:SetBlendMode('ADD')
-    icon:SetAllPoints(self)
+    local rotation = anim:CreateAnimation('Rotation')
+    rotation:SetDegrees(360)
+    rotation:SetOrder(1)
+    rotation:SetTarget(icon)
 
     self.anim = anim
     self.icon = icon
     self.scale = scale
+    self.rotation = rotation
 
     self:SetScript('OnHide', self.OnHide)
 end
@@ -58,18 +65,14 @@ function Shine:Acquire()
     return shine
 end
 
-function Shine:StartShine(cooldown, shineStyle)
-    local icon, scale = ns.GetIcon(cooldown, shineStyle)
-    if not icon then
-        return
-    end
-
+function Shine:StartShine(cooldown, profile)
     local shine = self:GetShine(cooldown)
     if not shine then
         shine = Shine:Acquire()
         shine:SetupCooldown(cooldown)
     end
-    shine:Start(icon, scale)
+    shine.profile = profile
+    shine:Start()
 end
 
 ---- method
@@ -91,13 +94,18 @@ function Shine:OnHide()
     self:Stop()
 end
 
-function Shine:Start(icon, scale)
+function Shine:Start()
     if self.anim:IsPlaying() then
         self.anim:Stop()
     end
 
+    local icon, scale = ns.GetIcon(self.cooldown, self.profile.shineStyle)
+
     self.icon:SetTexture(icon)
     self.scale:SetFromScale(scale, scale)
+    self.scale:SetDuration(self.profile.shineDuration)
+    self.rotation:SetDuration(self.profile.shineDuration / 2)
+    self.rotation:SetStartDelay(self.profile.shineDuration / 2)
     self:SetSize(self.cooldown:GetSize())
     self:Show()
     self.anim:Play()
