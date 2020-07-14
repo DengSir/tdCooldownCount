@@ -5,8 +5,8 @@
     <Script file="Api.lua" />
     <Script file="Addon.lua" />
     <Script file="Rules.lua" />
-    <Script file="Cooldown.lua" />
     <Script file="Timer.lua" />
     <Script file="Shine.lua" />
+    <Script file="Cooldown.lua" />
     <Script file="Option.lua" />
 </Ui>
