@@ -4,7 +4,7 @@
 -- @Date   : 6/29/2020, 1:48:54 PM
 --
 ---@type ns
-local ns = select(2, ...)
+local ADDON, ns = ...
 
 local L = ns.L
 local AceConfigRegistry = LibStub('AceConfigRegistry-3.0')
@@ -126,7 +126,7 @@ end
 
 local Options = {
     type = 'group',
-    name = 'tdCC',
+    name = ADDON,
     childGroups = 'tab',
     args = {
         themes = {type = 'group', name = L['Themes'], order = 1, args = Themes},
@@ -310,6 +310,9 @@ local RuleOption = {
             hidden = function(item)
                 return getOptionRule(item).locked
             end,
+            validate = function(item, value)
+                return ns.BuildRule(value)
+            end,
         },
     },
 }
@@ -318,10 +321,10 @@ function Option:Load()
     Options.args.profile = LibStub('AceDBOptions-3.0'):GetOptionsTable(Addon.db)
 
     local registry = LibStub('AceConfigRegistry-3.0')
-    registry:RegisterOptionsTable('tdCC', Options)
+    registry:RegisterOptionsTable(ADDON, Options)
 
     local dialog = LibStub('AceConfigDialog-3.0')
-    dialog:AddToBlizOptions('tdCC', 'tdCC')
+    dialog:AddToBlizOptions(ADDON, ADDON)
 end
 
 function Option:Update()
@@ -329,13 +332,8 @@ function Option:Update()
     wipe(Themes)
     wipe(ThemesDropdown)
 
-    for k, v in pairs(RulesFixed) do
-        Rules[k] = v
-    end
-
-    for k, v in pairs(ThemesFixed) do
-        Themes[k] = v
-    end
+    ns.tmerge(Rules, RulesFixed)
+    ns.tmerge(Themes, ThemesFixed)
 
     for k, v in pairs(Addon.db.profile.themes) do
         Themes[k] = ThemeOption
@@ -346,7 +344,7 @@ function Option:Update()
         Rules[k] = RuleOption
     end
 
-    AceConfigRegistry:NotifyChange('tdCC Options')
+    AceConfigRegistry:NotifyChange(ADDON)
 end
 
 function Option:SetRulePriority(rule, value)

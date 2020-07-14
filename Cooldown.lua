@@ -5,6 +5,8 @@
 ---@type ns
 local ns = select(2, ...)
 
+local Timer = ns.Timer
+
 local GetTime = GetTime
 local GetSpellCooldown = GetSpellCooldown
 
@@ -32,7 +34,7 @@ local function cooldownOnShow(cooldown)
 end
 
 local function cooldownOnHide(cooldown)
-    ns.Timer:StopTimer(cooldown)
+    return Timer:StopTimer(cooldown)
 end
 
 function Addon:SetupHooks()
@@ -60,9 +62,9 @@ function Addon:SetCooldown(cooldown, start, duration, m)
         cooldown._tdcc_start = start
         cooldown._tdcc_duration = duration
 
-        return ns.Timer:StartTimer(cooldown, start, duration)
+        return Timer:StartTimer(cooldown, start, duration)
     else
-        return ns.Timer:StopTimer(cooldown, start, duration)
+        return Timer:StopTimer(cooldown, start, duration)
     end
 end
 
@@ -83,7 +85,7 @@ function Addon:ShouldShow(cooldown, start, duration)
     if profile.checkGCD then
         local gcdStart, gcdDuration = GetSpellCooldown(29515) -- 29515/61304
         if gcdStart == start and gcdDuration == duration then
-            local timer = ns.Timer:GetTimer(cooldown)
+            local timer = Timer:GetTimer(cooldown)
             if not timer then
                 return
             end
@@ -108,7 +110,7 @@ function Addon:GetCooldownProfile(cooldown)
 end
 
 function Addon:RefreshAllTimers()
-    for cooldown, timer in ns.Timer:IterateTimers() do
+    for cooldown, timer in Timer:IterateTimers() do
         self:SetCooldown(cooldown, timer.start, timer.duration)
     end
 end

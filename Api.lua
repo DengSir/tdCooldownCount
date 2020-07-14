@@ -146,3 +146,15 @@ function ns.CreateThemeData(profile)
     end
     return ns.tmerge(src, profile)
 end
+
+function ns.BuildRule(code)
+    local f, err = loadstring('return ' .. code)
+    if not f then
+        return
+    end
+    local ok, func = pcall(f)
+    if not ok then
+        return
+    end
+    return func
+end

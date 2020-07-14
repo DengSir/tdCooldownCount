@@ -40,7 +40,7 @@ function Addon:UpdateRules()
                 name = v.name or k,
                 priority = v.priority,
                 theme = v.theme,
-                rule = v.rule and loadstring('return ' .. v.rule)() or AlwaysTrue,
+                rule = ns.BuildRule(v.rule) or AlwaysTrue,
             })
         end
     end
