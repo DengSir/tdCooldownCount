@@ -126,6 +126,7 @@ function Timer:Stop()
     self.duration = nil
     self.fontReady = nil
     self.cooldown = nil
+    self.ratio = nil
 
     self:Hide()
 end
