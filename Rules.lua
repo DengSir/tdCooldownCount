@@ -8,7 +8,7 @@ local ns = select(2, ...)
 
 local wipe, sort = table.wipe, table.sort
 local tinsert = table.insert
-local pairs, loadstring = pairs, loadstring
+local pairs = pairs
 
 local Addon = ns.Addon
 

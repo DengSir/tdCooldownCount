@@ -64,7 +64,7 @@ function Addon:SetCooldown(cooldown, start, duration, m)
 
         return Timer:StartTimer(cooldown, start, duration)
     else
-        return Timer:StopTimer(cooldown, start, duration)
+        return Timer:StopTimer(cooldown)
     end
 end
 
