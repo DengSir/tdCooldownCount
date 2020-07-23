@@ -41,6 +41,9 @@ function Addon:OnInitialize()
     self:SetupDefault()
     self:FixThemes()
     self:LoadOptionFrame()
+
+    SetCVar('countdownForCooldowns', false)
+    InterfaceOptionsActionBarsPanelCountdownCooldowns:Hide()
 end
 
 function Addon:OnEnable()
