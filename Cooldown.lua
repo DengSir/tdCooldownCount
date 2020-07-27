@@ -14,41 +14,67 @@ local Addon = ns.Addon
 
 local THEME_DEFAULT = ns.THEME_DEFAULT
 
-local cooldowns = {}
+local pending = (function()
+    local pendings = {}
+    local frame = CreateFrame('Frame')
+    frame:Hide()
+    frame:SetScript('OnUpdate', function()
+        frame:Hide()
+        for cooldown in pairs(pendings) do
+            Addon:SetCooldown(cooldown, cooldown._tdcc_start, cooldown._tdcc_duration)
+        end
+        wipe(pendings)
+    end)
+
+    return function(cooldown)
+        pendings[cooldown] = true
+        frame:Show()
+    end
+end)()
 
 local function setCooldown(cooldown, start, duration)
-    return Addon:SetCooldown(cooldown, start, duration)
+    cooldown._tdcc_start = start
+    cooldown._tdcc_duration = duration
+    pending(cooldown)
 end
 
-local function cooldownOnShow(cooldown)
-    if cooldown._tdcc_start then
-        local start, duration = cooldown._tdcc_start, cooldown._tdcc_duration
-
+local hookCooldown = (function()
+    local function cooldownDone(cooldown)
         cooldown._tdcc_start = nil
         cooldown._tdcc_duration = nil
+    end
 
-        if start + duration > GetTime() then
-            setCooldown(cooldown, start, duration)
+    local function cooldownOnHide(cooldown)
+        return Timer:StopTimer(cooldown)
+    end
+
+    local function cooldownOnShow(cooldown)
+        if cooldown._tdcc_start then
+            local start, duration = cooldown._tdcc_start, cooldown._tdcc_duration
+            if start + duration > GetTime() then
+                setCooldown(cooldown, start, duration)
+            else
+                cooldownDone(cooldown)
+            end
         end
     end
-end
 
-local function cooldownOnHide(cooldown)
-    return Timer:StopTimer(cooldown)
-end
+    local cooldowns = {}
+    return function(cooldown)
+        if cooldowns[cooldown] then
+            return
+        end
+
+        cooldowns[cooldown] = true
+
+        cooldown:HookScript('OnShow', cooldownOnShow)
+        cooldown:HookScript('OnHide', cooldownOnHide)
+        cooldown:HookScript('OnCooldownDone', cooldownDone)
+    end
+end)()
 
 function Addon:SetupHooks()
     hooksecurefunc(getmetatable(ActionButton1Cooldown).__index, 'SetCooldown', setCooldown)
-end
-
-function Addon:HookCooldown(cooldown)
-    if cooldowns[cooldown] then
-        return
-    end
-    cooldowns[cooldown] = true
-
-    cooldown:HookScript('OnShow', cooldownOnShow)
-    cooldown:HookScript('OnHide', cooldownOnHide)
 end
 
 function Addon:SetCooldown(cooldown, start, duration, m)
@@ -57,10 +83,7 @@ function Addon:SetCooldown(cooldown, start, duration, m)
         return
     end
     if show then
-        self:HookCooldown(cooldown)
-
-        cooldown._tdcc_start = start
-        cooldown._tdcc_duration = duration
+        hookCooldown(cooldown)
 
         return Timer:StartTimer(cooldown, start, duration)
     else
@@ -76,6 +99,10 @@ function Addon:ShouldShow(cooldown, start, duration)
         return
     end
     if not duration or duration == 0 then
+        return
+    end
+    if cooldown:GetWidth() <= 0 then
+        print('no width', cooldown)
         return
     end
     local profile = self:GetCooldownProfile(cooldown)

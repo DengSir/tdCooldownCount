@@ -88,7 +88,7 @@ function Timer:Start(start, duration)
     self.profile = Addon:GetCooldownProfile(self.cooldown)
 
     if not self.ratio or self.ratio == 0 then
-
+        print('no ratio', self)
     elseif self.ratio < self.profile.minRatio then
         return
     else
