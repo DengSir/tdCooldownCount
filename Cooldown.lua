@@ -17,18 +17,19 @@ local THEME_DEFAULT = ns.THEME_DEFAULT
 local pending = (function()
     local pendings = {}
     local frame = CreateFrame('Frame')
-    frame:Hide()
-    frame:SetScript('OnUpdate', function()
-        frame:Hide()
+
+    local function OnUpdate(self)
+        self:SetScript('OnUpdate', nil)
+
         for cooldown in pairs(pendings) do
             Addon:SetCooldown(cooldown, cooldown._tdcc_start, cooldown._tdcc_duration)
         end
         wipe(pendings)
-    end)
+    end
 
     return function(cooldown)
         pendings[cooldown] = true
-        frame:Show()
+        frame:SetScript('OnUpdate', OnUpdate)
     end
 end)()
 
@@ -38,12 +39,13 @@ local function setCooldown(cooldown, start, duration)
     pending(cooldown)
 end
 
-local hookCooldown = (function()
-    local function cooldownDone(cooldown)
-        cooldown._tdcc_start = nil
-        cooldown._tdcc_duration = nil
-    end
+local function clear(cooldown)
+    cooldown._tdcc_start = nil
+    cooldown._tdcc_duration = nil
+    Timer:StopTimer(cooldown)
+end
 
+local hookCooldown = (function()
     local function cooldownOnHide(cooldown)
         return Timer:StopTimer(cooldown)
     end
@@ -54,7 +56,7 @@ local hookCooldown = (function()
             if start + duration > GetTime() then
                 setCooldown(cooldown, start, duration)
             else
-                cooldownDone(cooldown)
+                clear(cooldown)
             end
         end
     end
@@ -69,12 +71,14 @@ local hookCooldown = (function()
 
         cooldown:HookScript('OnShow', cooldownOnShow)
         cooldown:HookScript('OnHide', cooldownOnHide)
-        cooldown:HookScript('OnCooldownDone', cooldownDone)
+        cooldown:HookScript('OnCooldownDone', clear)
     end
 end)()
 
 function Addon:SetupHooks()
-    hooksecurefunc(getmetatable(ActionButton1Cooldown).__index, 'SetCooldown', setCooldown)
+    local mt = getmetatable(ActionButton1Cooldown).__index
+    hooksecurefunc(mt, 'SetCooldown', setCooldown)
+    hooksecurefunc(mt, 'Clear', clear)
 end
 
 function Addon:SetCooldown(cooldown, start, duration, m)
@@ -87,7 +91,7 @@ function Addon:SetCooldown(cooldown, start, duration, m)
 
         return Timer:StartTimer(cooldown, start, duration)
     else
-        return Timer:StopTimer(cooldown)
+        clear(cooldown)
     end
 end
 
